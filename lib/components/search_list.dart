@@ -33,12 +33,12 @@ class _SearchListState extends State<SearchList> {
             child: ListTile(
               title: Text(
                 widget.list[i].title,
-                style: const TextStyle(color: Colors.white),
+                // style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
                 // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
                 widget.list[i].description,
-                style: const TextStyle(color: Colors.white54),
+                // style: const TextStyle(color: Colors.white54),
               ),
             ),
           );

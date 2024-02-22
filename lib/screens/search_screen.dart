@@ -18,10 +18,12 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
+        // backgroundColor: Theme.of(context).primaryColor,
         appBar: AppBar(
+            iconTheme: const IconThemeData(color: Colors.white),
+            backgroundColor: Theme.of(context).primaryColor,
             title: TextField(
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.white),
                 onSubmitted: (value) {
                   if (value.isNotEmpty) {
                     print(value);
@@ -40,10 +42,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     //   Icons.search,
                     //   color: Colors.green,
                     // ),
-                    hintText: 'Search your words...'))),
+                    hintText: 'Search your words...',
+                    hintStyle: TextStyle(color: Colors.white)))),
         body: result == null
             ? const Text('Please search first...',
-                style: TextStyle(color: Colors.white))
+                style: TextStyle(color: Colors.black))
             : ProductList(list: result!)
         // SearchList(list: result!),
         );

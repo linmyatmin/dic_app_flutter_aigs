@@ -37,16 +37,16 @@ class _DrawerNavigationState extends State<DrawerNavigation> {
                 );
               },
             ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Words'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => WordsScreen()),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: Icon(Icons.home),
+            //   title: Text('Words'),
+            //   onTap: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => WordsScreen()),
+            //     );
+            //   },
+            // ),
             ListTile(
               leading: Icon(Icons.contact_support),
               title: Text('Contact Us'),

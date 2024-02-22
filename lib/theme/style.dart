@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 ThemeData appTheme() => ThemeData(
       // primaryColor: Color(0xff242248),
-      primaryColor: Color.fromARGB(255, 18, 139, 49),
+      primaryColor: Color.fromARGB(255, 17, 42, 64),
       // accentColor: Color(0xff8468DD),
       canvasColor: Color.fromARGB(0, 80, 212, 109),
       primaryIconTheme: IconThemeData(color: Colors.black),

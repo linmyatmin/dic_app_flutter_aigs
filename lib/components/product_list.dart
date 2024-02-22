@@ -27,12 +27,12 @@ class _ProductListState extends State<ProductList> {
                         )));
           },
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(
-                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
-              // NetworkImage(widget.list[i].images[0]),
-              // widget.list[i].thumbnail),
-            ),
+            // leading: CircleAvatar(
+            //   backgroundImage: NetworkImage(
+            //       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
+            //   // NetworkImage(widget.list[i].images[0]),
+            //   // widget.list[i].thumbnail),
+            // ),
             // leading: CircleAvatar(
             //   child: FadeInImage.assetNetwork(
             //     placeholder:
@@ -43,20 +43,20 @@ class _ProductListState extends State<ProductList> {
             // ),
             title: Text(
               widget.list[i].title,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
               widget.list[i].description,
-              style: const TextStyle(color: Colors.white54),
+              style: const TextStyle(fontSize: 14),
             ),
-            trailing: IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {
-                // Add logic to handle adding product to favorites
-                print('added fav');
-              },
-            ),
+            // trailing: IconButton(
+            //   icon: const Icon(Icons.favorite_border),
+            //   onPressed: () {
+            //     // Add logic to handle adding product to favorites
+            //     print('added fav');
+            //   },
+            // ),
           ),
         );
       },

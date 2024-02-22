@@ -8,7 +8,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DicAppAigs',
+      title: 'DicApp',
       debugShowCheckedModeBanner: false,
       home: HomeScreen(),
       theme: appTheme(),
