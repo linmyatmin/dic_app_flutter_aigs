@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         centerTitle: true,
         title: const Text(
-          "Dictionary",
+          "GEMPEDIA",
           style: TextStyle(color: Colors.white),
         ),
         actions: <Widget>[
