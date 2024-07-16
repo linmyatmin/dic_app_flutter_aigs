@@ -1,17 +1,17 @@
-import 'package:dic_app_flutter/models/product_model.dart';
+import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:flutter/material.dart';
 
-class ProductList extends StatefulWidget {
-  List<Product> list;
+class WordList extends StatefulWidget {
+  List<Word> list;
 
-  ProductList({Key? key, required this.list}) : super(key: key);
+  WordList({Key? key, required this.list}) : super(key: key);
 
   @override
-  State<ProductList> createState() => _ProductListState();
+  State<WordList> createState() => _WordListState();
 }
 
-class _ProductListState extends State<ProductList> {
+class _WordListState extends State<WordList> {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
@@ -23,8 +23,8 @@ class _ProductListState extends State<ProductList> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => DetailScreen(
-                          product: widget.list[i],
-                          word: null,
+                          product: null,
+                          word: widget.list[i],
                         )));
           },
           child: ListTile(
@@ -43,12 +43,12 @@ class _ProductListState extends State<ProductList> {
             //   ),
             // ),
             title: Text(
-              widget.list[i].title,
+              widget.list[i].nameEn,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
-              widget.list[i].description,
+              widget.list[i].despEn,
               style: const TextStyle(fontSize: 14),
             ),
             // trailing: IconButton(

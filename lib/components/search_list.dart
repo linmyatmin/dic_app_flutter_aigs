@@ -28,6 +28,7 @@ class _SearchListState extends State<SearchList> {
                   MaterialPageRoute(
                       builder: (context) => DetailScreen(
                             product: widget.list[i],
+                            word: null,
                           )));
             },
             child: ListTile(

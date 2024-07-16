@@ -1,13 +1,16 @@
 import 'package:dic_app_flutter/components/img_view_dialog.dart';
 import 'package:dic_app_flutter/components/vdo_viewer.dart';
 import 'package:dic_app_flutter/models/product_model.dart';
+import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class DetailScreen extends StatefulWidget {
   Product? product;
+  Word? word;
 
-  DetailScreen({Key? key, required this.product}) : super(key: key);
+  DetailScreen({Key? key, required this.product, required this.word})
+      : super(key: key);
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -36,11 +39,11 @@ class _DetailScreenState extends State<DetailScreen> {
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: Theme.of(context).primaryColor,
           title: Text(
-            widget.product!.title,
+            widget.word!.nameEn,
             style: const TextStyle(color: Colors.white),
           ),
         ),
-        body: widget.product == null
+        body: widget.word == null
             ? const Text(
                 'Please search first...',
                 // style: TextStyle(color: Colors.white)
@@ -51,12 +54,12 @@ class _DetailScreenState extends State<DetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      widget.product!.title,
+                      widget.word!.nameEn,
                       // style: const TextStyle(color: Colors.white),
                     ),
                     SizedBox(height: size.height * 0.03),
                     Text(
-                      widget.product!.description,
+                      widget.word!.despEn,
                       // style: const TextStyle(color: Colors.white),
                     ),
                     SizedBox(height: size.height * 0.03),
@@ -64,28 +67,31 @@ class _DetailScreenState extends State<DetailScreen> {
                       children: <Widget>[
                         Expanded(
                           child: SizedBox(
-                            height: 120, // Adjust the height as needed
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: widget.product!.images.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    showImageViewDialog(
-                                        context, widget.product!.images[index]);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Image.network(
-                                      widget.product!.images[index],
-                                      width: 120, // Adjust the width as needed
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                              height: 120, // Adjust the height as needed
+                              child: const Text('images')
+
+                              // ListView.builder(
+                              //   scrollDirection: Axis.horizontal,
+                              //   itemCount: widget.product!.images.length,
+                              //   itemBuilder: (BuildContext context, int index) {
+                              //     return GestureDetector(
+                              //       onTap: () {
+                              //         showImageViewDialog(
+                              //             context, widget.product!.images[index]);
+                              //       },
+                              //       child: Padding(
+                              //         padding: const EdgeInsets.all(8.0),
+                              //         child: Image.network(
+                              //           widget.product!.images[index],
+                              //           width: 120, // Adjust the width as needed
+                              //           fit: BoxFit.cover,
+                              //         ),
+                              //       ),
+                              //     );
+                              //   },
+                              // ),
+
+                              ),
                         ),
                       ],
                     ),

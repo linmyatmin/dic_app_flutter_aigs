@@ -1,6 +1,8 @@
 import 'package:dic_app_flutter/components/product_list.dart';
+import 'package:dic_app_flutter/components/word_list.dart';
 import 'package:dic_app_flutter/helpers/drawer_navigation.dart';
 import 'package:dic_app_flutter/models/product_model.dart';
+import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/network/api.dart';
 import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:dic_app_flutter/screens/search_screen.dart';
@@ -16,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // List<User>? users;
   List<Product>? products;
+  List<Word>? words;
 
   loadProducts() {
     API().getProducts().then((value) => {
@@ -25,10 +28,19 @@ class _HomeScreenState extends State<HomeScreen> {
         });
   }
 
+  loadWords() {
+    API().getWords().then((value) => {
+          setState(() {
+            words = value;
+          })
+        });
+  }
+
   @override
   void initState() {
     super.initState();
-    loadProducts();
+    // loadProducts();
+    loadWords();
   }
 
   @override
@@ -55,10 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ))
         ],
       ),
-      body: products == null
+      body: words == null
           ? const Center(child: CircularProgressIndicator())
-          : ProductList(
-              list: products!,
+          : WordList(
+              list: words!,
             ),
 
       // ListView.separated(

@@ -1,25 +1,26 @@
+import 'dart:convert';
 import 'package:dic_app_flutter/models/word_model.dart';
 
-class WordsListModel {
-  late List<WordModel> words;
+class ResWord {
+  late List<Word> words;
 
-  WordsListModel({required this.words});
+  ResWord({required this.words});
 
-  WordsListModel.fromJson(Map<String, dynamic> json) {
-    // if (json['data'] != null) {
-    if (json != null) {
-      // words = new List<WordModel>();
-      json['data'].forEach((v) {
-        words.add(new WordModel.fromJson(v));
-      });
-    }
-  }
+  factory ResWord.fromRawJson(String str) => ResWord.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.words != null) {
-      data['data'] = this.words.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
+  String toRawJson() => json.encode(toJson());
+
+  factory ResWord.fromJson(Map<String, dynamic> json) => ResWord(
+        words: List<Word>.from(json["data"].map((x) => Word.fromJson(x))),
+        // total: json["total"],
+        // skip: json["skip"],
+        // limit: json["limit"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "words": List<dynamic>.from(words.map((x) => x.toJson())),
+        // "total": total,
+        // "skip": skip,
+        // "limit": limit,
+      };
 }

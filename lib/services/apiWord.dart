@@ -9,6 +9,6 @@ class ApiWord {
         await dio.get('https://jsonplaceholder.typicode.com/posts');
 
     // print(response);
-    return WordModel.fromJson(response.data);
+    return Word.fromJson(response.data);
   }
 }

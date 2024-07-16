@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:dic_app_flutter/models/product_model.dart';
 import 'package:dic_app_flutter/models/res_product_model.dart';
 import 'package:dic_app_flutter/models/user_model.dart';
+import 'package:dic_app_flutter/models/word_list_model.dart';
+import 'package:dic_app_flutter/models/word_model.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class API {
@@ -55,5 +58,16 @@ class API {
     } else {
       throw Exception('Failed to search products!');
     }
+  }
+
+  Future<List<Word>> getWords() async {
+// String data = await rootBundle.loadString('/data.json');
+
+    final String response = await rootBundle.loadString('/sample_data.json');
+    final jsonResp = ResWord.fromRawJson(response);
+
+    // print(jsonResp.words);
+
+    return jsonResp.words;
   }
 }
