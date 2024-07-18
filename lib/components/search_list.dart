@@ -27,7 +27,6 @@ class _SearchListState extends State<SearchList> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => DetailScreen(
-                            product: widget.list[i],
                             word: null,
                           )));
             },

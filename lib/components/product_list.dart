@@ -23,7 +23,6 @@ class _ProductListState extends State<ProductList> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => DetailScreen(
-                          product: widget.list[i],
                           word: null,
                         )));
           },

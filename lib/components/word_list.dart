@@ -23,7 +23,6 @@ class _WordListState extends State<WordList> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => DetailScreen(
-                          product: null,
                           word: widget.list[i],
                         )));
           },

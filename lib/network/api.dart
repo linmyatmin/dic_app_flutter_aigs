@@ -70,4 +70,16 @@ class API {
 
     return jsonResp.words;
   }
+
+  Future<List<Word>> searchWords(String searchValue) async {
+    final String response = await rootBundle.loadString('/sample_data.json');
+    var jsonResp = ResWord.fromRawJson(response);
+
+    // Filtering words based on search value
+    List<Word> filteredWords = jsonResp.words.where((word) {
+      return word.nameEn.toLowerCase().contains(searchValue.toLowerCase());
+    }).toList();
+
+    return filteredWords;
+  }
 }

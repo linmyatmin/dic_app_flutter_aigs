@@ -6,11 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class DetailScreen extends StatefulWidget {
-  Product? product;
+  // Product? product;
   Word? word;
 
-  DetailScreen({Key? key, required this.product, required this.word})
-      : super(key: key);
+  DetailScreen({Key? key, required this.word}) : super(key: key);
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();

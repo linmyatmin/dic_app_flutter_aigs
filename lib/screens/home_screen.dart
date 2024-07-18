@@ -17,16 +17,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // List<User>? users;
-  List<Product>? products;
+  // List<Product>? products;
   List<Word>? words;
 
-  loadProducts() {
-    API().getProducts().then((value) => {
-          setState(() {
-            products = value;
-          })
-        });
-  }
+  // loadProducts() {
+  //   API().getProducts().then((value) => {
+  //         setState(() {
+  //           products = value;
+  //         })
+  //       });
+  // }
 
   loadWords() {
     API().getWords().then((value) => {

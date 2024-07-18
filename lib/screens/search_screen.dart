@@ -1,6 +1,8 @@
 import 'package:dic_app_flutter/components/product_list.dart';
 import 'package:dic_app_flutter/components/search_list.dart';
+import 'package:dic_app_flutter/components/word_list.dart';
 import 'package:dic_app_flutter/models/product_model.dart';
+import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/network/api.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +15,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   var _api = API();
-  List<Product>? result;
+  List<Word>? result;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 onSubmitted: (value) {
                   if (value.isNotEmpty) {
                     print(value);
-                    _api.searchProducts(value).then((value) {
+                    _api.searchWords(value).then((value) {
                       setState(() {
                         result = value;
                       });
@@ -47,7 +49,7 @@ class _SearchScreenState extends State<SearchScreen> {
         body: result == null
             ? const Text('Please search first...',
                 style: TextStyle(color: Colors.black))
-            : ProductList(list: result!)
+            : WordList(list: result!)
         // SearchList(list: result!),
         );
   }
