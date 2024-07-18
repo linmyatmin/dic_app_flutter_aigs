@@ -1,10 +1,7 @@
-import 'package:dic_app_flutter/components/product_list.dart';
 import 'package:dic_app_flutter/components/word_list.dart';
 import 'package:dic_app_flutter/helpers/drawer_navigation.dart';
-import 'package:dic_app_flutter/models/product_model.dart';
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/network/api.dart';
-import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:dic_app_flutter/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 
