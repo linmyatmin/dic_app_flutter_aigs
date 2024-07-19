@@ -15,7 +15,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // List<User>? users;
   // List<Product>? products;
-  List<Word>? words;
+  List<Word> words = [];
+  List<Word> filteredWords = [];
+  TextEditingController searchController = TextEditingController();
 
   // loadProducts() {
   //   API().getProducts().then((value) => {
@@ -29,8 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
     API().getWords().then((value) => {
           setState(() {
             words = value;
+            filteredWords = value; // Initialize filteredWords with all words
           })
         });
+  }
+
+  void _filterWords() {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      filteredWords = words
+          .where((word) => word.nameEn.toLowerCase().contains(query))
+          .toList();
+    });
   }
 
   @override
@@ -38,6 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // loadProducts();
     loadWords();
+    searchController.addListener(_filterWords);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,25 +70,38 @@ class _HomeScreenState extends State<HomeScreen> {
           "GEMPEDIA",
           style: TextStyle(color: Colors.white),
         ),
-        actions: <Widget>[
-          IconButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SearchScreen()));
-              },
-              icon: const Icon(
-                Icons.search,
-              ))
-        ],
+        // actions: <Widget>[
+        //   IconButton(
+        //       onPressed: () {
+        //         Navigator.push(
+        //             context,
+        //             MaterialPageRoute(
+        //                 builder: (context) => const SearchScreen()));
+        //       },
+        //       icon: const Icon(
+        //         Icons.search,
+        //       ))
+        // ],
       ),
-      body: words == null
+      body: words.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : WordList(
-              list: words!,
+          : Column(
+              children: [
+                Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                          labelText: 'Search gem dictionary...',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search)),
+                    )),
+                Expanded(
+                    child: WordList(
+                  list: filteredWords,
+                ))
+              ],
             ),
-
       // ListView.separated(
       //     itemCount: products?.length as int,
       //     itemBuilder: (ctx, i) {

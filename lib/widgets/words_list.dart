@@ -30,8 +30,21 @@ class _WordsListState extends State<WordsList> {
               final post = postDataList[index];
 
               return ListTile(
-                title: Text(post.title),
-                subtitle: Text(post.body),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      post.title,
+                      style: TextStyle(fontSize: 18.0, color: Colors.grey[850]),
+                    ),
+                    Text(
+                      post.body,
+                      style: TextStyle(fontSize: 18.0, color: Colors.grey[850]),
+                    )
+                  ],
+                ),
+                // title: Text(post.title),
+                // subtitle: Text(post.body),
               );
             });
   }

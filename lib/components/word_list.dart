@@ -27,6 +27,29 @@ class _WordListState extends State<WordList> {
                         )));
           },
           child: ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                    child: Text(
+                  widget.list[i].nameEn,
+                  textAlign: TextAlign.left,
+                  maxLines: 1,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+                )),
+                Expanded(
+                    child: Text(
+                  widget.list[i].despEn,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style:
+                      TextStyle(fontWeight: FontWeight.normal, fontSize: 12.0),
+                ))
+              ],
+              // title: Text(post.title),
+              // subtitle: Text(post.body),
+            ),
             // leading: CircleAvatar(
             //   backgroundImage: NetworkImage(
             //       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
@@ -41,15 +64,15 @@ class _WordListState extends State<WordList> {
             //     fit: BoxFit.cover,
             //   ),
             // ),
-            title: Text(
-              widget.list[i].nameEn,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
-              widget.list[i].despEn,
-              style: const TextStyle(fontSize: 14),
-            ),
+            // title: Text(
+            //   widget.list[i].nameEn,
+            //   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            // ),
+            // subtitle: Text(
+            //   // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
+            //   widget.list[i].despEn,
+            //   style: const TextStyle(fontSize: 14),
+            // ),
             // trailing: IconButton(
             //   icon: const Icon(Icons.favorite_border),
             //   onPressed: () {
