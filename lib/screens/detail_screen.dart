@@ -1,9 +1,7 @@
 import 'package:dic_app_flutter/components/img_view_dialog.dart';
-import 'package:dic_app_flutter/components/vdo_viewer.dart';
-import 'package:dic_app_flutter/models/product_model.dart';
+import 'package:dic_app_flutter/components/video_viewer.dart';
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
 class DetailScreen extends StatefulWidget {
   // Product? product;
@@ -16,9 +14,6 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
-
   final List<String> images = [
     "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN06.jpg",
     "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN15.jpg",
@@ -32,19 +27,6 @@ class _DetailScreenState extends State<DetailScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    // _controller = VideoPlayerController.networkUrl(Uri.parse(
-    //     'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4'));
-
-    _controller = VideoPlayerController.network(
-      'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
-    );
-
-    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      setState(() {});
-    });
-
-    _controller.setLooping(true);
-    _controller.play();
   }
 
   @override
@@ -105,7 +87,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                       child: Image.network(
                                         images[index],
                                         width:
-                                            120, // Adjust the width as needed
+                                            180, // Adjust the width as needed
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -118,25 +100,15 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                       SizedBox(height: size.height * 0.03),
                       Center(
-                        child: _controller.value.isInitialized
-                            ? AspectRatio(
-                                aspectRatio: _controller.value.aspectRatio,
-                                child: VideoPlayer(_controller),
-                                // VideoProgressIndicator(_controller,
-                                //     allowScrubbing: true),
-                              )
-                            : const Text('fetching video data ...'),
+                        child: VideoViewer(
+                            videoUrl:
+                                // 'https://videos.pexels.com/video-files/5413531/5413531-hd_1280_720_30fps.mp4',
+                                'https://d3bh4clrfrmqaj.cloudfront.net/vids/qm_myanmar_ruby.mp4'),
                       ),
                     ],
                   )),
                 ),
               ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }
 
