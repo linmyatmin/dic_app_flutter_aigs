@@ -1,6 +1,7 @@
 import 'package:dic_app_flutter/screens/register_screen.dart';
 import 'package:dic_app_flutter/screens/contactus_screen.dart';
 import 'package:dic_app_flutter/screens/home_screen.dart';
+import 'package:dic_app_flutter/screens/setting_screen.dart';
 import 'package:dic_app_flutter/screens/words_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -64,10 +65,22 @@ class _DrawerNavigationState extends State<DrawerNavigation> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const RegisterScreen()),
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SettingScreen()),
+                );
+              },
+            )
           ],
         ),
       ),

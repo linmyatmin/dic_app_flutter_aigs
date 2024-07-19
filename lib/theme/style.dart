@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 ThemeData appTheme() => ThemeData(
+      brightness: Brightness.light,
       // primaryColor: Color(0xff242248),
-      primaryColor: Color.fromARGB(255, 17, 42, 64),
+      primaryColor: const Color.fromARGB(255, 17, 42, 64),
+      scaffoldBackgroundColor: Colors.white,
       // accentColor: Color(0xff8468DD),
-      canvasColor: Color.fromARGB(0, 80, 212, 109),
-      primaryIconTheme: IconThemeData(color: Colors.black),
-      textTheme: TextTheme(
+      canvasColor: const Color.fromARGB(0, 80, 212, 109),
+      primaryIconTheme: const IconThemeData(color: Colors.black),
+      textTheme: const TextTheme(
         headline1: TextStyle(
           fontFamily: 'Sans',
           fontWeight: FontWeight.bold,

@@ -17,16 +17,34 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   late VideoPlayerController _controller;
+  late Future<void> _initializeVideoPlayerFuture;
+
+  final List<String> images = [
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN06.jpg",
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN15.jpg",
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN17.jpg",
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN24.jpg",
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN34.jpg",
+    "https://www.aigsthailand.com/aigsschool//Inclusion/8/SYN37.jpg"
+  ];
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'))
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
-      });
+    // _controller = VideoPlayerController.networkUrl(Uri.parse(
+    //     'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4'));
+
+    _controller = VideoPlayerController.network(
+      'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    );
+
+    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+      setState(() {});
+    });
+
+    _controller.setLooping(true);
+    _controller.play();
   }
 
   @override
@@ -49,70 +67,76 @@ class _DetailScreenState extends State<DetailScreen> {
               )
             : Padding(
                 padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      widget.word!.nameEn,
-                      // style: const TextStyle(color: Colors.white),
-                    ),
-                    SizedBox(height: size.height * 0.03),
-                    Text(
-                      widget.word!.despEn,
-                      // style: const TextStyle(color: Colors.white),
-                    ),
-                    SizedBox(height: size.height * 0.03),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: SizedBox(
+                child: Scrollbar(
+                  thumbVisibility: false,
+                  child: SingleChildScrollView(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        widget.word!.nameEn,
+                        // style: const TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: size.height * 0.03),
+                      Text(
+                        widget.word!.despEn,
+                        // style: const TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: size.height * 0.03),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: SizedBox(
                               height: 120, // Adjust the height as needed
-                              child: const Text('images')
+                              child:
+                                  //  const Text('images')
 
-                              // ListView.builder(
-                              //   scrollDirection: Axis.horizontal,
-                              //   itemCount: widget.product!.images.length,
-                              //   itemBuilder: (BuildContext context, int index) {
-                              //     return GestureDetector(
-                              //       onTap: () {
-                              //         showImageViewDialog(
-                              //             context, widget.product!.images[index]);
-                              //       },
-                              //       child: Padding(
-                              //         padding: const EdgeInsets.all(8.0),
-                              //         child: Image.network(
-                              //           widget.product!.images[index],
-                              //           width: 120, // Adjust the width as needed
-                              //           fit: BoxFit.cover,
-                              //         ),
-                              //       ),
-                              //     );
-                              //   },
-                              // ),
+                                  ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: images.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      showImageViewDialog(
+                                          context, images[index]);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Image.network(
+                                        images[index],
+                                        width:
+                                            120, // Adjust the width as needed
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: size.height * 0.03),
-                    Center(
-                      child: _controller.value.isInitialized
-                          ? AspectRatio(
-                              aspectRatio: _controller.value.aspectRatio,
-                              child: VideoPlayer(_controller),
-                              // VideoProgressIndicator(_controller,
-                              //     allowScrubbing: true),
-                            )
-                          : const Text('fetching video data ...'),
-                    ),
-                  ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: size.height * 0.03),
+                      Center(
+                        child: _controller.value.isInitialized
+                            ? AspectRatio(
+                                aspectRatio: _controller.value.aspectRatio,
+                                child: VideoPlayer(_controller),
+                                // VideoProgressIndicator(_controller,
+                                //     allowScrubbing: true),
+                              )
+                            : const Text('fetching video data ...'),
+                      ),
+                    ],
+                  )),
                 ),
               ));
   }
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 }
 

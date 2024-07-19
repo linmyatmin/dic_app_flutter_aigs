@@ -35,7 +35,10 @@ class _WordListState extends State<WordList> {
                   widget.list[i].nameEn,
                   textAlign: TextAlign.left,
                   maxLines: 1,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.0,
+                  ),
                 )),
                 Expanded(
                     child: Text(
@@ -43,8 +46,10 @@ class _WordListState extends State<WordList> {
                   textAlign: TextAlign.right,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style:
-                      TextStyle(fontWeight: FontWeight.normal, fontSize: 12.0),
+                  style: TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 12.0,
+                  ),
                 ))
               ],
               // title: Text(post.title),
