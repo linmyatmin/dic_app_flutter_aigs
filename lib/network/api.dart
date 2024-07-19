@@ -63,7 +63,8 @@ class API {
   Future<List<Word>> getWords() async {
 // String data = await rootBundle.loadString('/data.json');
 
-    final String response = await rootBundle.loadString('/sample_data.json');
+    final String response =
+        await rootBundle.loadString('assets/sample_data.json');
     final jsonResp = ResWord.fromRawJson(response);
 
     // print(jsonResp.words);
@@ -72,7 +73,8 @@ class API {
   }
 
   Future<List<Word>> searchWords(String searchValue) async {
-    final String response = await rootBundle.loadString('/sample_data.json');
+    final String response =
+        await rootBundle.loadString('assets/sample_data.json');
     var jsonResp = ResWord.fromRawJson(response);
 
     // Filtering words based on search value
