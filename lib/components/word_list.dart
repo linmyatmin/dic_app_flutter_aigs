@@ -28,34 +28,40 @@ class _WordListState extends State<WordList> {
                         )));
           },
           child: ListTile(
+            dense: true,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
+                    flex: 1,
                     child: Text(
-                  widget.list[i].nameEn,
-                  textAlign: TextAlign.left,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.0,
-                  ),
-                )),
+                      widget.list[i].nameEn,
+                      textAlign: TextAlign.left,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.0,
+                      ),
+                    )),
                 Expanded(
+                  flex: 2,
                   child: Html(
                     data: widget.list[i]
                         .despEn, // Assuming nameEn contains HTML content
                     style: {
                       // Customize any HTML tags' styles here, e.g., <sub> or <p>
                       "p": Style(
-                        fontSize: FontSize(9.0),
-                        fontWeight: FontWeight.bold,
+                        fontSize: FontSize(10.0),
+                        fontWeight: FontWeight.normal,
                         textAlign: TextAlign.left,
                         maxLines: 1, // Limit to one line
+                        // height: 1.2,
                       ),
                       "sub": Style(
                         fontSize: FontSize(
-                            5.0), // Slightly smaller font for subscript
+                            6.0), // Slightly smaller font for subscript
                       ),
                     },
                   ),
