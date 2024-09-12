@@ -1,43 +1,70 @@
-import 'dart:io';
-import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:dic_app_flutter/models/member.dart';
 import 'package:http/http.dart' as http;
 
 class AuthAPI {
-  final String _baseUrl = "https://dummyjson.com";
-
-  // Future<HttpResponse> registerUser() async{
-
-  // }
-
-  final Dio _dio = Dio();
+  // final String _baseUrl = "https://dummyjson.com";
+  // final String _baseUrl = "http://192.168.9.144";
+  final String _baseUrl = "https://localhost:44378";
 
   Future<dynamic> login(String username, String password) async {
     try {
-      print('$username, $password');
+      // username = 'emilys';
+      // password = 'emilyspass';
 
-      username = 'kminchelle';
-      password = '0lelplR';
-      // _dio.options.headers['content-Type'] = 'application/json';
-      // _dio.options.headers["authorization"] = "token ${token}";
-      Response response = await _dio.post(
-        '$_baseUrl/auth/login',
-        data: {
+      final url = Uri.parse('$_baseUrl/api/auth/signin');
+      // final url = Uri.parse('$_baseUrl/auth/login');
+
+      print(
+          'Login attempt with username: $username, password: $password, url: $url');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
           'username': username,
           'password': password,
-        },
-        options: Options(
-          contentType: "application/json",
-          // headers: {
-          //   "authorization": "Bearer <your token>",
-          // },
-        ),
+        }),
       );
-      print('login_auth_api: $response');
-      // queryParameters: {'apikey': ApiSecret.apiKey},
-      // );
-      return response;
-    } on DioError catch (e) {
-      return e.response!.data;
+
+      print('login_auth_api status code: ${response.statusCode}');
+      print('login_auth_api body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        // Assuming the response body is in JSON format
+        return jsonDecode(response.body);
+      } else {
+        // Handle different HTTP status codes
+        return {
+          'status': response.statusCode,
+          'message': 'Login failed',
+          'details': jsonDecode(response.body)
+        };
+      }
+    } catch (e) {
+      print('Error during login: $e');
+      return {'error': e.toString()};
+    }
+  }
+
+  Future<dynamic> register(Member member) async {
+    try {
+      final url = Uri.parse('$_baseUrl/api/auth/register');
+
+      print(
+          'Register attempt with username: ${member.username}, email: ${member.email}');
+
+      final response = await http.post(url,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(
+              {'username': member.username, 'password': member.username}));
+    } catch (e) {
+      print('Error during register: $e');
+      return {'error': e.toString()};
     }
   }
 }

@@ -97,9 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: size.height * 0.05),
-
-                    SizedBox(height: size.height * 0.03),
+                    SizedBox(height: size.height * 0.01),
                     TextFormField(
                       validator: (value) =>
                           Validator.validateEmail(value ?? ""),
@@ -113,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: size.height * 0.03),
+                    SizedBox(height: size.height * 0.01),
                     TextFormField(
                       obscureText: _showPassword,
                       validator: (value) =>
@@ -141,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: size.height * 0.06),
+                    SizedBox(height: size.height * 0.01),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -161,16 +159,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-
+                    SizedBox(height: size.height * 0.01),
                     SizedBox(
                       width: double.infinity,
-                      child: TextButton(
-                          onPressed: () => Navigator.push(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => LoginScreen())),
-                          child: const Text('Login')),
-                    )
+                                  // builder: (context) => HomeScreen(accesstoken: accessToken)));
+                                  builder: (context) => LoginScreen()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                            primary: const Color.fromARGB(255, 48, 148, 34),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15)),
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

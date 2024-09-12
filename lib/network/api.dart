@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 class API {
   // final String _baseUrl = "https://jsonplaceholder.typicode.com";
-  final String _baseUrl = "https://dummyjson.com";
+  final String _baseUrl = "https://api.aigsthailand.com/api";
   // final String _baseUrl = "https://fakestoreapi.com";
 
   Future<List<User>> getUsers() async {
@@ -61,10 +61,24 @@ class API {
   }
 
   Future<List<Word>> getWords() async {
-// String data = await rootBundle.loadString('/data.json');
+    // final response = await http.get(Uri.parse("$_baseUrl/words"));
+    // // final response =
+    // //     await http.get(Uri.parse("http://localhost:50667/api/words"));
+
+    // // print(response.statusCode);
+
+    // if (response.statusCode == 200) {
+    //   var jsonResp = ResWord.fromRawJson(response.body);
+
+    //   return jsonResp.words;
+    // } else {
+    //   throw Exception('Failed to load words!');
+    // }
+
+// // String data = await rootBundle.loadString('/data.json');
 
     final String response =
-        await rootBundle.loadString('assets/sample_data.json');
+        await rootBundle.loadString('assets/sample_data_subscript.json');
     final jsonResp = ResWord.fromRawJson(response);
 
     // print(jsonResp.words);

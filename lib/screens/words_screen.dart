@@ -20,26 +20,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // centerTitle: true,
-        title: const Text(
-          "Words",
-        ),
-      ),
-      body:
-          // Container(),
-          ListView.builder(
-              itemCount: postDataList.length,
-              itemBuilder: (context, index) {
-                final post = postDataList[index];
-
-                return ListTile(
-                  title: Text(post.title),
-                  subtitle: Text(post.body),
-                );
-              }),
-    );
+    return const Text('Words Screen');
   }
 
   Future<void> fetchPosts() async {

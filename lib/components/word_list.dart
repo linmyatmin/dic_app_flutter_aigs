@@ -1,6 +1,7 @@
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class WordList extends StatefulWidget {
   List<Word> list;
@@ -41,16 +42,34 @@ class _WordListState extends State<WordList> {
                   ),
                 )),
                 Expanded(
-                    child: Text(
-                  widget.list[i].despEn,
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.normal,
-                    fontSize: 12.0,
+                  child: Html(
+                    data: widget.list[i]
+                        .despEn, // Assuming nameEn contains HTML content
+                    style: {
+                      // Customize any HTML tags' styles here, e.g., <sub> or <p>
+                      "p": Style(
+                        fontSize: FontSize(12.0),
+                        fontWeight: FontWeight.bold,
+                        textAlign: TextAlign.left,
+                        maxLines: 1, // Limit to one line
+                      ),
+                      "sub": Style(
+                        fontSize: FontSize(
+                            9.0), // Slightly smaller font for subscript
+                      ),
+                    },
                   ),
-                ))
+                  //     child: Text(
+                  //   widget.list[i].despEn,
+                  //   textAlign: TextAlign.right,
+                  //   maxLines: 1,
+                  //   overflow: TextOverflow.ellipsis,
+                  //   style: TextStyle(
+                  //     fontWeight: FontWeight.normal,
+                  //     fontSize: 12.0,
+                  //   ),
+                  // )
+                )
               ],
               // title: Text(post.title),
               // subtitle: Text(post.body),

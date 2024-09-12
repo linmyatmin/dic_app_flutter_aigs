@@ -1,72 +1,69 @@
+import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
+import 'package:dic_app_flutter/screens/aboutus_screen.dart';
+import 'package:dic_app_flutter/screens/profile_screen.dart';
 import 'package:dic_app_flutter/screens/register_screen.dart';
-import 'package:dic_app_flutter/screens/contactus_screen.dart';
 import 'package:dic_app_flutter/screens/home_screen.dart';
 import 'package:dic_app_flutter/screens/setting_screen.dart';
-import 'package:dic_app_flutter/screens/words_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DrawerNavigation extends StatefulWidget {
+class DrawerNavigation extends ConsumerStatefulWidget {
   const DrawerNavigation({super.key});
 
   @override
-  State<DrawerNavigation> createState() => _DrawerNavigationState();
+  ConsumerState<DrawerNavigation> createState() => _DrawerNavigationState();
 }
 
-class _DrawerNavigationState extends State<DrawerNavigation> {
+class _DrawerNavigationState extends ConsumerState<DrawerNavigation> {
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final member = authState.member;
+    final bool userLoggedIn = member != null ? true : false;
+
     return Container(
       child: Drawer(
         child: ListView(
           children: <Widget>[
-            UserAccountsDrawerHeader(
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage(
-                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
+            if (userLoggedIn)
+              UserAccountsDrawerHeader(
+                currentAccountPicture: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
+                ),
+                accountName: Text(member.username),
+                accountEmail: Text(member.email),
+                decoration:
+                    BoxDecoration(color: Theme.of(context).primaryColor),
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(16.0),
+                decoration:
+                    BoxDecoration(color: Theme.of(context).primaryColor),
+                child: Text(
+                  'Welcome to the App',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
               ),
-              accountName: Text('DevTest'),
-              accountEmail: Text('dev@test.com'),
-              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-            ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-              },
-            ),
             // ListTile(
             //   leading: Icon(Icons.home),
-            //   title: Text('Words'),
+            //   title: Text('Home'),
             //   onTap: () {
             //     Navigator.push(
             //       context,
-            //       MaterialPageRoute(builder: (context) => WordsScreen()),
+            //       MaterialPageRoute(builder: (context) => const HomeScreen()),
             //     );
             //   },
             // ),
             ListTile(
-              leading: Icon(Icons.contact_support),
-              title: Text('Contact Us'),
+              leading: Icon(Icons.account_box),
+              title: Text('Profile'),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const ContactUsScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.app_registration),
-              title: Text('Sign Up'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const RegisterScreen()),
+                      builder: (context) => const ProfileScreen()),
                 );
               },
             ),
@@ -80,7 +77,19 @@ class _DrawerNavigationState extends State<DrawerNavigation> {
                       builder: (context) => const SettingScreen()),
                 );
               },
-            )
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.app_registration),
+              title: Text('Sign Up / Sign In'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const RegisterScreen()),
+                );
+              },
+            ),
           ],
         ),
       ),
