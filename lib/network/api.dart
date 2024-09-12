@@ -61,29 +61,31 @@ class API {
   }
 
   Future<List<Word>> getWords() async {
-    // final response = await http.get(Uri.parse("$_baseUrl/words"));
-    // // final response =
-    // //     await http.get(Uri.parse("http://localhost:50667/api/words"));
+    final response = await http.get(Uri.parse("$_baseUrl/words"));
 
-    // // print(response.statusCode);
+    // final response =
+    //     await http.get(Uri.parse("https://api.aigsthailand.com/api/words/339"));
 
-    // if (response.statusCode == 200) {
-    //   var jsonResp = ResWord.fromRawJson(response.body);
+    print(response.statusCode);
+    print(response.body);
 
-    //   return jsonResp.words;
-    // } else {
-    //   throw Exception('Failed to load words!');
-    // }
+    if (response.statusCode == 200) {
+      var jsonResp = ResWord.fromRawJson(response.body);
+
+      return jsonResp.words;
+    } else {
+      throw Exception('Failed to load words!');
+    }
 
 // // String data = await rootBundle.loadString('/data.json');
 
-    final String response =
-        await rootBundle.loadString('assets/sample_data_subscript.json');
-    final jsonResp = ResWord.fromRawJson(response);
+    // final String response =
+    //     await rootBundle.loadString('assets/sample_data_subscript.json');
+    // final jsonResp = ResWord.fromRawJson(response);
 
-    // print(jsonResp.words);
+    // // print(jsonResp.words);
 
-    return jsonResp.words;
+    // return jsonResp.words;
   }
 
   Future<List<Word>> searchWords(String searchValue) async {

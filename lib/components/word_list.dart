@@ -16,6 +16,7 @@ class _WordListState extends State<WordList> {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      padding: const EdgeInsets.all(8),
       itemCount: widget.list.length,
       itemBuilder: (ctx, i) {
         return InkWell(
@@ -27,95 +28,96 @@ class _WordListState extends State<WordList> {
                           word: widget.list[i],
                         )));
           },
-          child: ListTile(
-            dense: true,
-            contentPadding:
-                EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            title: Container(
-              constraints: BoxConstraints(maxHeight: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                      // flex: 1,
-                      child: Text(
-                    widget.list[i].nameEn,
-                    textAlign: TextAlign.left,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.0,
+          child:
+              // ListTile(
+              // dense: true,
+              // contentPadding:
+              //     EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              // title:
+              // constraints: BoxConstraints(maxHeight: 30),
+              Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                  // flex: 1,
+                  child: Text(
+                widget.list[i].nameEn,
+                textAlign: TextAlign.left,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.0,
+                ),
+              )),
+              Expanded(
+                // flex: 2,
+                child: Html(
+                  data: widget
+                      .list[i].despEn, // Assuming nameEn contains HTML content
+                  style: {
+                    // Customize any HTML tags' styles here, e.g., <sub> or <p>
+                    "p": Style(
+                      fontSize: FontSize(12.0),
+                      fontWeight: FontWeight.normal,
+                      textAlign: TextAlign.left,
+                      maxLines: 1, // Limit to one line
+                      // height: 1.2,
                     ),
-                  )),
-                  Expanded(
-                    // flex: 2,
-                    child: Html(
-                      data: widget.list[i]
-                          .despEn, // Assuming nameEn contains HTML content
-                      style: {
-                        // Customize any HTML tags' styles here, e.g., <sub> or <p>
-                        "p": Style(
-                          fontSize: FontSize(12.0),
-                          fontWeight: FontWeight.normal,
-                          textAlign: TextAlign.left,
-                          maxLines: 1, // Limit to one line
-                          // height: 1.2,
-                        ),
-                        "sub": Style(
-                          fontSize: FontSize(
-                              6.0), // Slightly smaller font for subscript
-                        ),
-                      },
+                    "sub": Style(
+                      fontSize:
+                          FontSize(6.0), // Slightly smaller font for subscript
                     ),
-                    //     child: Text(
-                    //   widget.list[i].despEn,
-                    //   textAlign: TextAlign.right,
-                    //   maxLines: 1,
-                    //   overflow: TextOverflow.ellipsis,
-                    //   style: TextStyle(
-                    //     fontWeight: FontWeight.normal,
-                    //     fontSize: 12.0,
-                    //   ),
-                    // )
-                  )
-                ],
-                // title: Text(post.title),
-                // subtitle: Text(post.body),
-              ),
-            ),
-            // leading: CircleAvatar(
-            //   backgroundImage: NetworkImage(
-            //       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
-            //   // NetworkImage(widget.list[i].images[0]),
-            //   // widget.list[i].thumbnail),
-            // ),
-            // leading: CircleAvatar(
-            //   child: FadeInImage.assetNetwork(
-            //     placeholder:
-            //         'assets/placeholder_image.png', // Placeholder image asset path
-            //     image: products![i].images[0],
-            //     fit: BoxFit.cover,
-            //   ),
-            // ),
-            // title: Text(
-            //   widget.list[i].nameEn,
-            //   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            // ),
-            // subtitle: Text(
-            //   // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
-            //   widget.list[i].despEn,
-            //   style: const TextStyle(fontSize: 14),
-            // ),
-            // trailing: IconButton(
-            //   icon: const Icon(Icons.favorite_border),
-            //   onPressed: () {
-            //     // Add logic to handle adding product to favorites
-            //     print('added fav');
-            //   },
-            // ),
+                  },
+                ),
+                //     child: Text(
+                //   widget.list[i].despEn,
+                //   textAlign: TextAlign.right,
+                //   maxLines: 1,
+                //   overflow: TextOverflow.ellipsis,
+                //   style: TextStyle(
+                //     fontWeight: FontWeight.normal,
+                //     fontSize: 12.0,
+                //   ),
+                // )
+              )
+            ],
+            // title: Text(post.title),
+            // subtitle: Text(post.body),
           ),
+
+          // leading: CircleAvatar(
+          //   backgroundImage: NetworkImage(
+          //       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
+          //   // NetworkImage(widget.list[i].images[0]),
+          //   // widget.list[i].thumbnail),
+          // ),
+          // leading: CircleAvatar(
+          //   child: FadeInImage.assetNetwork(
+          //     placeholder:
+          //         'assets/placeholder_image.png', // Placeholder image asset path
+          //     image: products![i].images[0],
+          //     fit: BoxFit.cover,
+          //   ),
+          // ),
+          // title: Text(
+          //   widget.list[i].nameEn,
+          //   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          // ),
+          // subtitle: Text(
+          //   // "${users![idx].users[0].address}, ${users![idx].company.catchPhrase}, ${users![idx].company.bs}",
+          //   widget.list[i].despEn,
+          //   style: const TextStyle(fontSize: 14),
+          // ),
+          // trailing: IconButton(
+          //   icon: const Icon(Icons.favorite_border),
+          //   onPressed: () {
+          //     // Add logic to handle adding product to favorites
+          //     print('added fav');
+          //   },
+          // ),
+          // ),
         );
       },
       separatorBuilder: (BuildContext context, int index) => const Divider(),
