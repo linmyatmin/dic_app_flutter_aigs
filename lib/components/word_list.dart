@@ -38,7 +38,7 @@ class _WordListState extends State<WordList> {
                   maxLines: 1,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15.0,
+                    fontSize: 13.0,
                   ),
                 )),
                 Expanded(
@@ -48,14 +48,14 @@ class _WordListState extends State<WordList> {
                     style: {
                       // Customize any HTML tags' styles here, e.g., <sub> or <p>
                       "p": Style(
-                        fontSize: FontSize(12.0),
+                        fontSize: FontSize(9.0),
                         fontWeight: FontWeight.bold,
                         textAlign: TextAlign.left,
                         maxLines: 1, // Limit to one line
                       ),
                       "sub": Style(
                         fontSize: FontSize(
-                            9.0), // Slightly smaller font for subscript
+                            5.0), // Slightly smaller font for subscript
                       ),
                     },
                   ),
