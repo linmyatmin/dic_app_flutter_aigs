@@ -6,7 +6,10 @@ import 'package:flutter_html/flutter_html.dart';
 
 class WordDetail extends StatefulWidget {
   Word? word;
-  WordDetail({Key? key, required this.word}) : super(key: key);
+  double textSize;
+
+  WordDetail({Key? key, required this.word, required this.textSize})
+      : super(key: key);
 
   @override
   State<WordDetail> createState() => _WordDetailState();
@@ -31,10 +34,21 @@ class _WordDetailState extends State<WordDetail> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(widget.word!.nameEn),
+            Text(
+              widget.word!.nameEn,
+              style: TextStyle(fontSize: widget.textSize),
+            ),
             SizedBox(height: size.height * 0.03),
             // Text(widget.word!.despEn),
-            Html(data: widget.word!.despEn),
+            Html(
+              data: widget.word!.despEn,
+              style: {
+                // Customize any HTML tags' styles here, e.g., <sub> or <p>
+                "p": Style(
+                  fontSize: FontSize(widget.textSize),
+                ),
+              },
+            ),
             SizedBox(height: size.height * 0.03),
             Row(
               children: <Widget>[

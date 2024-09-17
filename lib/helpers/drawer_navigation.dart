@@ -42,7 +42,7 @@ class _DrawerNavigationState extends ConsumerState<DrawerNavigation> {
                 decoration:
                     BoxDecoration(color: Theme.of(context).primaryColor),
                 child: Text(
-                  'Welcome to the App',
+                  'Welcome to GEMPEDIA',
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/favorites_notifier.dart';
+import 'package:dic_app_flutter/providers/font_size_provider.dart'; // Import the font size provider
 
 class FavoriteScreen extends ConsumerWidget {
   const FavoriteScreen({super.key});
@@ -9,6 +10,7 @@ class FavoriteScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favorites = ref.watch(favoritesProvider);
+    // final fontSize = ref.watch(fontSizeProvider); // Watch the font size
 
     return Scaffold(
       body: favorites.isEmpty
@@ -37,7 +39,12 @@ class FavoriteScreen extends ConsumerWidget {
                     ),
                   ),
                   child: ListTile(
-                    title: Text(word.nameEn),
+                    title: Text(
+                      word.nameEn,
+                      style: const TextStyle(
+                          fontSize:
+                              12.0), // Use the font size from the provider
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
