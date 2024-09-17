@@ -40,28 +40,66 @@ class DetailScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //     children: [
+          //       const Text("Font Size"),
+          //       Slider(
+          //         min: 10.0,
+          //         max: 30.0,
+          //         divisions: 10,
+          //         value: fontSize,
+          //         onChanged: (newSize) {
+          //           // Update the font size using the provider
+          //           ref.read(fontSizeProvider.notifier).updateFontSize(newSize);
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0.0),
+            child: Container(
+              color: Color.fromARGB(255, 45, 66, 87),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Text Size",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      min: 10.0,
+                      max: 30.0,
+                      divisions: 10,
+                      value: fontSize,
+                      onChanged: (newSize) {
+                        ref
+                            .read(fontSizeProvider.notifier)
+                            .updateFontSize(newSize);
+                      },
+                    ),
+                  ),
+                  Text(
+                    fontSize.toStringAsFixed(
+                        1), // Display the font size with one decimal place
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           // Use the fontSize from the provider
           Expanded(
             child: WordDetail(word: word, textSize: fontSize),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Font Size"),
-                Slider(
-                  min: 10.0,
-                  max: 30.0,
-                  divisions: 10,
-                  value: fontSize,
-                  onChanged: (newSize) {
-                    // Update the font size using the provider
-                    ref.read(fontSizeProvider.notifier).updateFontSize(newSize);
-                  },
-                ),
-              ],
-            ),
           ),
         ],
       ),
