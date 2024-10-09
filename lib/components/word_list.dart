@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
 class WordList extends StatefulWidget {
-  List<Word> list;
+  final List<Word> list;
+  final ScrollController scrollController; // Add ScrollController
 
-  WordList({Key? key, required this.list}) : super(key: key);
+  WordList({Key? key, required this.list, required this.scrollController})
+      : super(key: key);
 
   @override
   State<WordList> createState() => _WordListState();
@@ -16,7 +18,8 @@ class _WordListState extends State<WordList> {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8.0),
+      controller: widget.scrollController, // Assign ScrollController
       itemCount: widget.list.length,
       itemBuilder: (ctx, i) {
         return InkWell(

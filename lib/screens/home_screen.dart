@@ -8,6 +8,7 @@ import 'package:dic_app_flutter/screens/aboutus_screen.dart';
 import 'package:dic_app_flutter/screens/favorites_screen.dart';
 import 'package:dic_app_flutter/screens/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // class HomeScreen extends ConsumerStatefulWidget {
@@ -88,6 +89,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   List<Word> words = [];
   List<Word> filteredWords = [];
   TextEditingController searchController = TextEditingController();
+  String selectedLetter = ''; // Track selected letter
+  ScrollController _scrollController = ScrollController();
+  bool _isFabVisible = false; // Track FAB visibility
 
   loadWords() {
     API().getWords().then((value) => {
@@ -101,9 +105,54 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _filterWords() {
     final query = searchController.text.toLowerCase();
     setState(() {
-      filteredWords = words
-          .where((word) => word.nameEn.toLowerCase().contains(query))
-          .toList();
+      // Start by showing all words or filtering by the selected letter
+      if (selectedLetter.isEmpty || selectedLetter == 'all') {
+        filteredWords = words;
+      } else if (selectedLetter == 'numbers') {
+        // Filter words that start with a number
+        filteredWords = words
+            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn))
+            .toList();
+      } else if (selectedLetter == 'symbols') {
+        // Filter words that start with a symbol
+        filteredWords = words
+            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn))
+            .toList();
+      } else {
+        // Filter words by the selected alphabet letter
+        filteredWords = words
+            .where(
+                (word) => word.nameEn.toLowerCase().startsWith(selectedLetter))
+            .toList();
+      }
+
+      // Now apply the search query on top of the filtered result
+      if (query.isNotEmpty) {
+        filteredWords = filteredWords
+            .where((word) => word.nameEn.toLowerCase().startsWith(query))
+            .toList();
+      }
+    });
+  }
+
+  void _filterByLetter(String letter) {
+    setState(() {
+      selectedLetter = letter;
+      if (letter == 'all') {
+        filteredWords = words; // Show all words
+      } else if (letter == 'numbers') {
+        filteredWords = words
+            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn))
+            .toList(); // Show words starting with numbers
+      } else if (letter == 'symbols') {
+        filteredWords = words
+            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn))
+            .toList(); // Show words starting with symbols
+      } else {
+        filteredWords = words
+            .where((word) => word.nameEn.startsWith(letter))
+            .toList(); // Show words starting with selected letter
+      }
     });
   }
 
@@ -112,33 +161,176 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     loadWords();
     searchController.addListener(_filterWords);
+
+    // Listen to scroll changes and show/hide the floating button
+    _scrollController.addListener(() {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        setState(() {
+          _isFabVisible = true;
+        });
+      } else if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
+        setState(() {
+          _isFabVisible = false;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _showAlphabetFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Filter by Alphabet'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300, // Adjust the height to ensure all items fit
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:
+                    2, // 4 buttons per row to accommodate more filters
+                childAspectRatio: 2.0, // Make the buttons wider
+                crossAxisSpacing: 4.0, // Add some space between buttons
+                mainAxisSpacing: 4.0, // Add some space between rows
+              ),
+              itemCount: 29, // 26 letters + All, Number, Symbol
+              itemBuilder: (context, index) {
+                String label;
+                String letter;
+                if (index == 0) {
+                  label = "All";
+                  letter = 'all';
+                } else if (index == 1) {
+                  label = "Number";
+                  letter = 'numbers';
+                } else if (index == 2) {
+                  label = "Symbol";
+                  letter = 'symbols';
+                } else {
+                  label = String.fromCharCode(65 + index - 3); // A-Z
+                  letter = label.toLowerCase();
+                }
+                return Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _filterByLetter(letter);
+                      Navigator.pop(context); // Close the dialog
+                    },
+                    child: Text(label),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return words.isEmpty
         ? const Center(child: CircularProgressIndicator())
-        : Column(
+        : Stack(
             children: [
-              Padding(
-                  padding: const EdgeInsets.all(5.0),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: const InputDecoration(
-                        labelText: 'Search gem dictionary...',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.search)),
-                  )),
-              Expanded(
-                  child: WordList(
-                list: filteredWords,
-              ))
+              Column(
+                children: [
+                  // Alphabet filter buttons
+                  // SizedBox(
+                  //   height: 50,
+                  //   child: ListView.builder(
+                  //     scrollDirection: Axis.horizontal,
+                  //     itemCount: 26,
+                  //     itemBuilder: (context, index) {
+                  //       final letter = String.fromCharCode(65 + index); // A-Z
+                  //       return Padding(
+                  //         padding: const EdgeInsets.all(4.0),
+                  //         child: ElevatedButton(
+                  //           onPressed: () {
+                  //             _filterByLetter(letter.toLowerCase());
+                  //           },
+                  //           child: Text(letter),
+                  //         ),
+                  //       );
+                  //     },
+                  //   ),
+                  // ),
+                  Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                            labelText: 'Search gem dictionary...',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search)),
+                      )),
+                  // Display the filtered selection and total word count with background color
+                  Padding(
+                    padding: const EdgeInsets.all(0.0),
+                    child: Container(
+                      color: const Color.fromARGB(
+                          255, 45, 66, 87), // Apply background color
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                          horizontal: 16.0), // Add padding inside the container
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Filtered: ${selectedLetter.isEmpty ? 'All' : (selectedLetter == 'numbers' ? 'Number' : (selectedLetter == 'symbols' ? 'Symbol' : selectedLetter.toUpperCase()))}',
+                            style: const TextStyle(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors
+                                  .white, // Text color to contrast the background
+                            ),
+                          ),
+                          Text(
+                            'Total: ${filteredWords.length}',
+                            style: const TextStyle(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors
+                                  .white, // Text color to contrast the background
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  Expanded(
+                      child: WordList(
+                    list: filteredWords,
+                    scrollController: _scrollController,
+                  ))
+                ],
+              ),
+              if (_isFabVisible)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    onPressed: _showAlphabetFilterDialog,
+                    child: const Icon(Icons.filter_list),
+                  ),
+                ),
             ],
           );
   }
