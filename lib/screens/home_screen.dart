@@ -127,7 +127,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         : Column(
             children: [
               Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(5.0),
                   child: TextField(
                     controller: searchController,
                     decoration: const InputDecoration(

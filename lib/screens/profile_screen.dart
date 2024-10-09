@@ -1,3 +1,4 @@
+import 'package:dic_app_flutter/screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -128,6 +129,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             InkWell(
               onTap: () {
                 // Add your see more plans action here
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SubscriptionScreen()),
+                );
               },
               child: const Text(
                 'See more plans',

@@ -50,40 +50,40 @@ class _WordDetailState extends State<WordDetail> {
               },
             ),
             SizedBox(height: size.height * 0.03),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: SizedBox(
-                    height: 120,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: images.length,
-                      itemBuilder: (context, i) {
-                        return GestureDetector(
-                          onTap: () {
-                            showImageViewDialog(context, images[i]);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Image.network(
-                              images[i],
-                              width: 250,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                )
-              ],
-            ),
-            SizedBox(height: size.height * 0.03),
-            const Center(
-              child: VideoViewer(
-                  videoUrl:
-                      'https://d3bh4clrfrmqaj.cloudfront.net/vids/qm_myanmar_ruby.mp4'),
-            ),
+            // Row(
+            //   children: <Widget>[
+            //     Expanded(
+            //       child: SizedBox(
+            //         height: 120,
+            //         child: ListView.builder(
+            //           scrollDirection: Axis.horizontal,
+            //           itemCount: images.length,
+            //           itemBuilder: (context, i) {
+            //             return GestureDetector(
+            //               onTap: () {
+            //                 showImageViewDialog(context, images[i]);
+            //               },
+            //               child: Padding(
+            //                 padding: const EdgeInsets.all(8),
+            //                 child: Image.network(
+            //                   images[i],
+            //                   width: 250,
+            //                   fit: BoxFit.cover,
+            //                 ),
+            //               ),
+            //             );
+            //           },
+            //         ),
+            //       ),
+            //     )
+            //   ],
+            // ),
+            // SizedBox(height: size.height * 0.03),
+            // const Center(
+            //   child: VideoViewer(
+            //       videoUrl:
+            //           'https://d3bh4clrfrmqaj.cloudfront.net/vids/qm_myanmar_ruby.mp4'),
+            // ),
           ],
         ),
       ),
