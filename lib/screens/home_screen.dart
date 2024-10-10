@@ -111,25 +111,25 @@ class _HomePageState extends ConsumerState<HomePage> {
       } else if (selectedLetter == 'numbers') {
         // Filter words that start with a number
         filteredWords = words
-            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn))
+            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn!))
             .toList();
       } else if (selectedLetter == 'symbols') {
         // Filter words that start with a symbol
         filteredWords = words
-            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn))
+            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn!))
             .toList();
       } else {
         // Filter words by the selected alphabet letter
         filteredWords = words
             .where(
-                (word) => word.nameEn.toLowerCase().startsWith(selectedLetter))
+                (word) => word.nameEn!.toLowerCase().startsWith(selectedLetter))
             .toList();
       }
 
       // Now apply the search query on top of the filtered result
       if (query.isNotEmpty) {
         filteredWords = filteredWords
-            .where((word) => word.nameEn.toLowerCase().startsWith(query))
+            .where((word) => word.nameEn!.toLowerCase().startsWith(query))
             .toList();
       }
     });
@@ -142,15 +142,15 @@ class _HomePageState extends ConsumerState<HomePage> {
         filteredWords = words; // Show all words
       } else if (letter == 'numbers') {
         filteredWords = words
-            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn))
+            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn!))
             .toList(); // Show words starting with numbers
       } else if (letter == 'symbols') {
         filteredWords = words
-            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn))
+            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn!))
             .toList(); // Show words starting with symbols
       } else {
         filteredWords = words
-            .where((word) => word.nameEn.startsWith(letter))
+            .where((word) => word.nameEn!.startsWith(letter))
             .toList(); // Show words starting with selected letter
       }
     });

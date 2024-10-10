@@ -40,7 +40,7 @@ class FavoriteScreen extends ConsumerWidget {
                   ),
                   child: ListTile(
                     title: Text(
-                      word.nameEn,
+                      word.nameEn!,
                       style: const TextStyle(
                           fontSize:
                               12.0), // Use the font size from the provider

@@ -45,7 +45,7 @@ class _WordListState extends State<WordList> {
               Expanded(
                   // flex: 1,
                   child: Text(
-                widget.list[i].nameEn,
+                widget.list[i].nameEn!,
                 textAlign: TextAlign.left,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

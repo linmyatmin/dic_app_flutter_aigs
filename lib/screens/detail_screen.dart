@@ -23,7 +23,7 @@ class DetailScreen extends ConsumerWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Theme.of(context).primaryColor,
         title: Text(
-          word!.nameEn,
+          word!.nameEn!,
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
