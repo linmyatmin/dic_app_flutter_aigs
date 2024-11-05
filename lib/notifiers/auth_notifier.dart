@@ -62,8 +62,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final GoogleSignIn _googleSignIn;
   final SecureStorageService _secureStorage;
 
+  // AuthNotifier(this.authAPI, this._googleSignIn, this._secureStorage)
+  //     : super(AuthState());
+
   AuthNotifier(this.authAPI, this._googleSignIn, this._secureStorage)
-      : super(AuthState());
+      : super(AuthState()) {
+    // Check for stored user when initializing
+    checkStoredUser();
+  }
+
+  Future<void> checkStoredUser() async {
+    try {
+      final user = await _secureStorage.getUser();
+      if (user != null) {
+        state = state.copyWith(
+          isAuthenticated: true,
+          token: user.token,
+          userId: user.userId,
+          user: user,
+        );
+      }
+    } catch (e) {
+      print('Error checking stored user: $e');
+      await logout();
+    }
+  }
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -117,9 +140,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       print('Created user model: $user');
 
+      // Store user in secure storage
+      await _secureStorage.saveUser(user);
+
       state = state.copyWith(
         isAuthenticated: true,
-        token: token,
+        token: user.token,
         userId: userId,
         user: user,
         isLoading: false,
