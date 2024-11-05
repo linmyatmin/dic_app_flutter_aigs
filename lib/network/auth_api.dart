@@ -11,24 +11,66 @@ class AuthAPI {
   final String _baseUrlProduction = "http://122.155.9.144";
 
   Future<Map<String, dynamic>> login(String username, String password) async {
-    final response =
-        await _dio.post('$_baseUrlProduction/api/auth/signin', data: {
-      'Email': username,
-      'Password': password,
-    });
-    print('authAPI_LOGIN: ${response.data}');
-    return response.data;
+    try {
+      final response =
+          await _dio.post('$_baseUrlProduction/api/auth/signin', data: {
+        'Email': username,
+        'Password': password,
+      });
+
+      print('Login response: ${response.data}');
+      return response.data;
+    } on DioError catch (e) {
+      if (e.response != null) {
+        print('Login error response: ${e.response?.data}');
+        return e.response?.data ??
+            {'success': false, 'message': 'Login failed', 'data': null};
+      }
+      throw {
+        'success': false,
+        'message': 'Network error occurred',
+        'data': null
+      };
+    }
   }
 
   Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
-    final response =
-        await _dio.post('$_baseUrlProduction/api/auth/signup', data: {
-      'username': username,
-      'email': email,
-      'password': password,
-    });
-    return response.data;
+    try {
+      final response = await _dio.post(
+        '$_baseUrlProduction/api/auth/signup',
+        data: {
+          'username': username,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      // Print response for debugging
+      print('Register response: ${response.data}');
+
+      return response.data;
+    } on DioError catch (e) {
+      // Handle API error responses
+      if (e.response != null) {
+        print('Register error response: ${e.response?.data}');
+        return e.response?.data ??
+            {'success': false, 'message': 'Registration failed', 'data': null};
+      }
+      throw {
+        'success': false,
+        'message': 'Network error occurred',
+        'data': null
+      };
+    }
+
+    // final response =
+    //     await _dio.post('$_baseUrlProduction/api/auth/signup', data: {
+    //   'username': username,
+    //   'email': email,
+    //   'password': password,
+    // });
+    // return response.data;
   }
 
   Future<Map<String, dynamic>> signInWithGoogle() async {

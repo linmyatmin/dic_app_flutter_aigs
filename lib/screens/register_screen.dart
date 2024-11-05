@@ -1,12 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/login_screen.dart';
 import 'package:dic_app_flutter/utils/validator.dart';
 
-class RegisterScreen extends ConsumerWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   RegisterScreen({Key? key}) : super(key: key);
 
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -14,30 +20,51 @@ class RegisterScreen extends ConsumerWidget {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
+
   void _register(BuildContext context, WidgetRef ref) async {
     if (_formKey.currentState!.validate()) {
-      final authNotifier = ref.read(authProvider.notifier);
-      await authNotifier.register(
-        usernameController.text,
-        emailController.text,
-        passwordController.text,
-      );
+      try {
+        final authNotifier = ref.read(authProvider.notifier);
+        await authNotifier.register(
+          usernameController.text,
+          emailController.text,
+          passwordController.text,
+        );
 
-      final authState = ref.read(authProvider);
-      if (authState.user != null) {
+        // Show success message and navigate to login
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please login.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(bottom: 100, right: 20, left: 20),
+          ),
+        );
+
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
-      } else {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${authState.error}')),
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.height - 100,
+              right: 20,
+              left: 20,
+            ),
+          ),
         );
       }
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final primaryColor = Theme.of(context).primaryColor;
     final textColor =
@@ -102,6 +129,8 @@ class RegisterScreen extends ConsumerWidget {
                     icon: Icons.lock,
                     obscureText: true,
                     validator: Validator.validatePassword,
+                    isPassword: true,
+                    showPassword: _showPassword,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -111,6 +140,8 @@ class RegisterScreen extends ConsumerWidget {
                     obscureText: true,
                     validator: (value) => Validator.validateConfirmPassword(
                         passwordController.text, value),
+                    isPassword: true,
+                    showPassword: _showConfirmPassword,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -118,8 +149,8 @@ class RegisterScreen extends ConsumerWidget {
                         ? null
                         : () => _register(context, ref),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
-                      onPrimary: primaryColor,
+                      backgroundColor: Colors.white,
+                      foregroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -176,10 +207,12 @@ class RegisterScreen extends ConsumerWidget {
     required IconData icon,
     bool obscureText = false,
     required String? Function(String?) validator,
+    bool isPassword = false,
+    bool showPassword = false,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: obscureText,
+      obscureText: isPassword ? !showPassword : obscureText,
       validator: validator,
       decoration: InputDecoration(
         hintText: hintText,
@@ -188,6 +221,24 @@ class RegisterScreen extends ConsumerWidget {
           color: Colors.white70,
           size: 20,
         ),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  showPassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (hintText == 'Password') {
+                      _showPassword = !_showPassword;
+                    } else {
+                      _showConfirmPassword = !_showConfirmPassword;
+                    }
+                  });
+                },
+              )
+            : null,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         filled: true,

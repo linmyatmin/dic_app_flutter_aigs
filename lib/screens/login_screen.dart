@@ -6,16 +6,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/register_screen.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   LoginScreen({Key? key}) : super(key: key);
 
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController usernameController =
       TextEditingController(text: 'lin@aigsthailand.com');
   final TextEditingController passwordController =
       TextEditingController(text: '123456');
 
-  Future<void> _handleLogin(WidgetRef ref, BuildContext context) async {
+  bool _showPassword = false;
+
+  Future<void> _handleLogin(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     try {
@@ -23,10 +30,6 @@ class LoginScreen extends ConsumerWidget {
             usernameController.text.trim(),
             passwordController.text,
           );
-
-      final authState = ref.read(authProvider);
-      print('After login - User: ${authState.user}');
-      print('After login - IsAuthenticated: ${authState.isAuthenticated}');
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -36,13 +39,62 @@ class LoginScreen extends ConsumerWidget {
         SnackBar(
           content: Text(e.toString()),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            right: 20,
+            left: 20,
+          ),
         ),
       );
     }
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    required String? Function(String?) validator,
+    bool isPassword = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? !_showPassword : obscureText,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(icon, color: Colors.white70, size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _showPassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showPassword = !_showPassword;
+                  });
+                },
+              )
+            : null,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+        hintStyle: const TextStyle(color: Colors.white70, fontSize: 14),
+      ),
+      style: const TextStyle(color: Colors.white, fontSize: 14),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final primaryColor = Theme.of(context).primaryColor;
     final textColor =
@@ -115,15 +167,16 @@ class LoginScreen extends ConsumerWidget {
                     icon: Icons.lock,
                     obscureText: true,
                     validator: Validator.validatePassword,
+                    isPassword: true,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: authState.isLoading
                         ? null
-                        : () => _handleLogin(ref, context),
+                        : () => _handleLogin(context),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
-                      onPrimary: primaryColor,
+                      backgroundColor: Colors.white,
+                      foregroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -143,18 +196,18 @@ class LoginScreen extends ConsumerWidget {
                             ),
                           ),
                   ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: () async {
-                      await ref.read(authProvider.notifier).signInWithGoogle();
-                    },
-                    icon: Image.asset('assets/google_logo.png', height: 24),
-                    label: const Text('Sign In with Google'),
-                    style: TextButton.styleFrom(
-                      primary: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
+                  // const SizedBox(height: 16),
+                  // TextButton.icon(
+                  //   onPressed: () async {
+                  //     await ref.read(authProvider.notifier).signInWithGoogle();
+                  //   },
+                  //   icon: Image.asset('assets/google_logo.png', height: 24),
+                  //   label: const Text('Sign In with Google'),
+                  //   style: TextButton.styleFrom(
+                  //     primary: Colors.white,
+                  //     padding: const EdgeInsets.symmetric(vertical: 12),
+                  //   ),
+                  // ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => Navigator.pushReplacement(
@@ -181,34 +234,6 @@ class LoginScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData icon,
-    bool obscureText = false,
-    required String? Function(String?) validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      validator: validator,
-      decoration: InputDecoration(
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: Colors.white70, size: 20),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
-        ),
-        hintStyle: const TextStyle(color: Colors.white70, fontSize: 14),
-      ),
-      style: const TextStyle(color: Colors.white, fontSize: 14),
     );
   }
 }

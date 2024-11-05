@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:dic_app_flutter/services/secure_storage_service.dart';
@@ -68,23 +70,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await authAPI.login(email, password);
 
-      print('Login response: $response');
+      if (response['success'] == false) {
+        throw response['message'] ?? 'Login failed';
+      }
 
-      final token = response['token']?.toString();
-      final userId = response['userId']?.toString();
-      final userName = response['userName']?.toString() ?? '';
-      final userEmail = response['email']?.toString() ?? email;
-      final subscriptionPlanId =
-          response['subscriptionPlanId']?.toString() ?? '';
-      final startDate = response['startDate']?.toString() ?? '';
-      final endDate = response['endDate']?.toString() ?? '';
-      final status = response['status']?.toString() ?? '';
-      final subscriptionPrice = response['subscriptionPrice']?.toString() ?? '';
-      final isTrial = response['isTrial']?.toString() ?? '';
-      final trialEndDate = response['trialEndDate']?.toString() ?? '';
+      final data = response['data'];
+      if (data == null) {
+        throw 'Invalid login response: missing data';
+      }
+
+      final token = data['token']?.toString();
+      final userId = data['userId']?.toString();
+      final userName = data['userName']?.toString() ?? '';
+      final userEmail = data['email']?.toString() ?? email;
+      final subscriptionPlanId = data['subscriptionPlanId']?.toString() ?? '';
+      final startDate = data['startDate']?.toString() ?? '';
+      final endDate = data['endDate']?.toString() ?? '';
+      final status = data['status']?.toString() ?? '';
+      final subscriptionPrice = data['subscriptionPrice']?.toString() ?? '';
+      final isTrial = data['isTrial']?.toString() ?? '';
+      final trialEndDate = data['trialEndDate']?.toString() ?? '';
 
       if (token == null || userId == null) {
-        throw 'Invalid login response';
+        throw 'Invalid login response: missing token or userId';
       }
 
       final user = UserModel(
@@ -132,18 +140,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await prefs.setString('isTrial', isTrial);
       await prefs.setString('trialEndDate', trialEndDate);
     } catch (e) {
+      String errorMessage = e.toString();
+      if (e.toString().contains('DioError')) {
+        try {
+          final response = json.decode(e.toString());
+          errorMessage = response['message'] ?? 'Login failed';
+        } catch (_) {
+          errorMessage = 'Network error occurred';
+        }
+      }
+
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMessage,
         isAuthenticated: false,
       );
-      rethrow;
+      throw errorMessage;
     }
   }
 
   Future<void> logout() async {
-    await _secureStorage.deleteUser();
-    state = AuthState();
+    try {
+      await _secureStorage.deleteUser();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear(); // Clear all stored preferences
+      state = AuthState(); // Reset to initial state
+    } catch (e) {
+      print('Error during logout: $e');
+      throw 'Failed to sign out';
+    }
   }
 
   Future<void> loadUser() async {
@@ -173,11 +198,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await authAPI.register(username, email, password);
-      final user = UserModel.fromJson(response);
+
+      // Check if the response indicates an error
+      if (response['success'] == false) {
+        throw response['message'] ?? 'Registration failed';
+      }
+
+      final user = UserModel.fromJson(response['data']);
       await _secureStorage.saveUser(user);
       state = state.copyWith(user: user, isLoading: false);
     } catch (e) {
-      state = state.copyWith(error: e.toString(), isLoading: false);
+      // state = state.copyWith(error: e.toString(), isLoading: false);
+      String errorMessage = e.toString();
+      // Handle DioError or other network errors
+      if (e.toString().contains('DioError')) {
+        try {
+          final response = json.decode(e.toString());
+          errorMessage = response['message'] ?? 'Registration failed';
+        } catch (_) {
+          errorMessage = 'Network error occurred';
+        }
+      }
+      state = state.copyWith(
+        error: errorMessage,
+        isLoading: false,
+      );
+      throw errorMessage;
     }
   }
 }

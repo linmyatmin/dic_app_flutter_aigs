@@ -14,26 +14,48 @@ class ProfileScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final currentUser = authState.user;
     final primaryColor = Theme.of(context).primaryColor;
-    final textColor =
-        Theme.of(context).primaryTextTheme.titleLarge?.color ?? Colors.white;
 
     if (currentUser == null) {
-      return const Scaffold(
+      return Scaffold(
+        backgroundColor: primaryColor,
         body: Center(
-          child: Text('Please log in to view your profile.'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Please log in to view your profile.',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: primaryColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text('Login'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: primaryColor,
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           ),
@@ -42,33 +64,34 @@ class ProfileScreen extends ConsumerWidget {
           'Profile',
           style: TextStyle(color: Colors.white),
         ),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.edit),
-        //     onPressed: () {
-        //       // TODO: Implement edit profile functionality
-        //     },
-        //   ),
-        // ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(
-                    currentUser.image ?? 'https://via.placeholder.com/150'),
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.2),
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  size: 50,
+                  color: Colors.white,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             _buildInfoTile(context, 'Username', currentUser.userName),
             _buildInfoTile(context, 'Email', currentUser.email),
-            _buildInfoTile(context, 'Subscription Plan',
-                currentUser.subscriptionPlanId.toString() ?? 'Free'),
-            const SizedBox(height: 24),
+            // _buildInfoTile(context, 'Subscription Plan',
+            //     'Plan ${currentUser.subscriptionPlanId.toString()}'),
+            const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -76,23 +99,44 @@ class ProfileScreen extends ConsumerWidget {
                   MaterialPageRoute(builder: (context) => SubscriptionScreen()),
                 );
               },
-              child: Text('Manage Subscription'),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
+                backgroundColor: Colors.white,
+                foregroundColor: primaryColor,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Manage Subscription',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                await ref.read(authProvider.notifier).signOut();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
+                try {
+                  await ref.read(authProvider.notifier).logout();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error signing out: $e')),
+                  );
+                }
               },
-              child: Text('Sign Out'),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
-                primary: Colors.red,
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Sign Out',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -103,23 +147,31 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildInfoTile(BuildContext context, String title, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.caption,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context)
-                .textTheme
-                .subtitle1
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const Divider(),
+          const SizedBox(height: 8),
+          Container(
+            height: 1,
+            color: Colors.white.withOpacity(0.2),
+          ),
         ],
       ),
     );
