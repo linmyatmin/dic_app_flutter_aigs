@@ -1,6 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aigs.gempedia">
+>
     <application
-        android:label="dic_app_flutter"
+        android:label="Gempedia"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

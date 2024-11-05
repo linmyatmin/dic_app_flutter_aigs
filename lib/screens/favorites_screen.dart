@@ -10,13 +10,40 @@ class FavoriteScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favorites = ref.watch(favoritesProvider);
-    // final fontSize = ref.watch(fontSizeProvider); // Watch the font size
 
     return Scaffold(
       body: favorites.isEmpty
-          ? const Center(child: Text('No favorites added'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No favorites yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add words to your favorites list',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            )
           : ListView.separated(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               itemCount: favorites.length,
               itemBuilder: (context, index) {
                 final word = favorites[index];
@@ -25,43 +52,62 @@ class FavoriteScreen extends ConsumerWidget {
                   direction: DismissDirection.endToStart,
                   onDismissed: (direction) {
                     ref.read(favoritesProvider.notifier).removeFavorite(word);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text('${word.nameEn} removed from favorites')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')} removed from favorites',
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                   },
                   background: Container(
-                    color: Colors.red[500],
+                    decoration: BoxDecoration(
+                      color: Colors.red[500],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: const Icon(
-                      Icons.delete,
+                      Icons.delete_outline,
                       color: Colors.white,
                     ),
                   ),
-                  child: ListTile(
-                    title: Text(
-                      word.nameEn!,
-                      style: const TextStyle(
-                          fontSize:
-                              12.0), // Use the font size from the provider
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: Colors.grey[200]!),
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailScreen(word: word),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: Text(
+                        word.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                      );
-                    },
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailScreen(word: word),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
-              separatorBuilder: (context, index) {
-                return Divider(
-                  color: Colors.grey[400],
-                  height: 1,
-                );
-              },
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
             ),
     );
   }

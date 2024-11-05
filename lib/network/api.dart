@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'package:dic_app_flutter/models/subscription_plan_model.dart';
 import 'package:dic_app_flutter/models/word_list_model.dart';
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 class API {
+  final Dio _dio = Dio();
   // final String _baseUrl = "https://jsonplaceholder.typicode.com";
   final String _baseUrl = "https://api.aigsthailand.com/api";
+  final String _baseUrl2 = "http://122.155.9.144/api";
   // final String _baseUrl = "https://fakestoreapi.com";
 
   // Future<List<User>> getUsers() async {
@@ -118,6 +122,72 @@ class API {
       }
     } else {
       throw Exception('Failed to load word details!');
+    }
+  }
+
+  Future<List<SubscriptionPlan>> getSubscriptionPlans() async {
+    final response = await http.get(Uri.parse("$_baseUrl2/subscriptionplans"));
+
+    print(response.statusCode);
+    print(response.body);
+
+    if (response.statusCode == 200) {
+      var jsonResp = json.decode(response.body);
+
+      if (jsonResp is List) {
+        return jsonResp.map((plan) => SubscriptionPlan.fromJson(plan)).toList();
+      } else {
+        throw Exception('Unexpected response format!');
+      }
+    } else {
+      throw Exception('Failed to load subscription plans!');
+    }
+  }
+
+  Future<void> verifyPurchase(
+    String purchaseId,
+    String verificationData,
+    int planId,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/verify-purchase',
+        data: {
+          'purchase_id': purchaseId,
+          'verification_data': verificationData,
+          'plan_id': planId,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to verify purchase');
+      }
+    } catch (e) {
+      throw Exception('Error verifying purchase: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await _dio.post(
+        '/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return Map<String, dynamic>.from(response.data);
+      } else {
+        throw 'Login failed';
+      }
+    } catch (e) {
+      if (e is DioException) {
+        final errorMessage = e.response?.data?['message'] ?? 'Login failed';
+        throw errorMessage;
+      }
+      throw e.toString();
     }
   }
 }

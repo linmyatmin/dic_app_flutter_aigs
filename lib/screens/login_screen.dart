@@ -4,134 +4,211 @@ import 'package:dic_app_flutter/utils/validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
+import 'package:dic_app_flutter/screens/register_screen.dart';
 
 class LoginScreen extends ConsumerWidget {
+  LoginScreen({Key? key}) : super(key: key);
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   final TextEditingController usernameController =
-      TextEditingController(text: 'emilys');
+      TextEditingController(text: 'lin@aigsthailand.com');
   final TextEditingController passwordController =
-      TextEditingController(text: 'emilyspass');
+      TextEditingController(text: '123456');
 
-  void _login(BuildContext context, WidgetRef ref, String _userName,
-      String _password) async {
-    final authNotifier = ref.read(authProvider.notifier);
+  Future<void> _handleLogin(WidgetRef ref, BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
 
-    await authNotifier.login(
-      _userName,
-      _password,
-    );
+    try {
+      await ref.read(authProvider.notifier).login(
+            usernameController.text.trim(),
+            passwordController.text,
+          );
 
-    final authState = ref.read(authProvider);
+      final authState = ref.read(authProvider);
+      print('After login - User: ${authState.user}');
+      print('After login - IsAuthenticated: ${authState.isAuthenticated}');
 
-    if (authState.member != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${authState.error}')));
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var size = MediaQuery.of(context).size;
-
     final authState = ref.watch(authProvider);
+    final primaryColor = Theme.of(context).primaryColor;
+    final textColor =
+        Theme.of(context).primaryTextTheme.titleLarge?.color ?? Colors.white;
 
     return Scaffold(
-        appBar: AppBar(
-          iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: Theme.of(context).primaryColor,
-          title: const Text(
-            'Login',
-            style: TextStyle(color: Colors.white),
+      backgroundColor: primaryColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: textColor,
+          ),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
           ),
         ),
-        body: Form(
-          key: _formKey,
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (authState.isLoading)
-                  const Center(
-                    child: CircularProgressIndicator(),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            ),
+            child: Text(
+              'Skip',
+              style: TextStyle(color: textColor),
+            ),
+          ),
+        ],
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Image.asset(
+                    'assets/icon/icon_no_bg.png',
+                    width: 100,
+                    height: 100,
                   ),
-                if (authState.error != null) Text('Error: ${authState.error}'),
-                Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextFormField(
-                      controller: usernameController,
-                      validator: (value) {
-                        return Validator.validateName(value ?? '');
-                      },
-                      decoration: InputDecoration(
-                          hintText: 'Username',
-                          isDense: true,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10))),
-                    )
-                    // TextField(
-                    //   controller: usernameController,
-                    //   decoration: const InputDecoration(labelText: 'Username'),
-                    // ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Welcome Back',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: passwordController,
-                    validator: (value) {
-                      return Validator.validatePassword(value ?? '');
-                    },
-                    decoration: InputDecoration(
-                        hintText: 'Password',
-                        isDense: true,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10))),
-                    obscureText: true,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () => _login(context, ref,
-                          usernameController.text, passwordController.text),
-                      style: ElevatedButton.styleFrom(
-                          primary: Theme.of(context).primaryColor,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 15)),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: usernameController,
+                    hintText: 'Username',
+                    icon: Icons.person,
+                    validator: Validator.validateName,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: passwordController,
+                    hintText: 'Password',
+                    icon: Icons.lock,
+                    obscureText: true,
+                    validator: Validator.validatePassword,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () => _handleLogin(ref, context),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.white,
+                      onPrimary: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                  ],
-                ),
-                if (authState.member != null)
-                  Text('Welcome, ${authState.member?.firstName}'),
-                SizedBox(
-                  height: size.height * 0.03,
-                ),
-                Center(
-                  child: ElevatedButton(
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
                     onPressed: () async {
                       await ref.read(authProvider.notifier).signInWithGoogle();
                     },
-                    child: const Text('Sign In with Google'),
+                    icon: Image.asset('assets/google_logo.png', height: 24),
+                    label: const Text('Sign In with Google'),
+                    style: TextButton.styleFrom(
+                      primary: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
-                )
-              ],
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterScreen()),
+                    ),
+                    child: const Text(
+                      "Don't have an account? Register",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  if (authState.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        'Error: ${authState.error}',
+                        style: TextStyle(color: Colors.red[300]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(icon, color: Colors.white70, size: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+        hintStyle: const TextStyle(color: Colors.white70, fontSize: 14),
+      ),
+      style: const TextStyle(color: Colors.white, fontSize: 14),
+    );
   }
 }

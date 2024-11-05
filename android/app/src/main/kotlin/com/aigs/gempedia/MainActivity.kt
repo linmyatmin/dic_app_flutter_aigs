@@ -1,4 +1,4 @@
-package com.example.dic_app_flutter
+package com.aigs.gempedia
 
 import io.flutter.embedding.android.FlutterActivity
 

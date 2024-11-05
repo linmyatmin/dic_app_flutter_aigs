@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dic_app_flutter/components/word_list.dart';
 import 'package:dic_app_flutter/helpers/drawer_navigation.dart';
 import 'package:dic_app_flutter/helpers/bottom_navigation.dart';
+import 'package:dic_app_flutter/main.dart';
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/network/api.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
@@ -10,13 +13,10 @@ import 'package:dic_app_flutter/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// class HomeScreen extends ConsumerStatefulWidget {
-//   const HomeScreen({super.key});
-
-//   @override
-//   ConsumerState<HomeScreen> createState() => _HomeScreenState();
-// }
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dic_app_flutter/providers/recent_searches_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dic_app_flutter/services/word_cache_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -31,7 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
     FavoriteScreen(),
-    AboutUsScreen()
+    AboutUsScreen(showAppBar: false),
   ];
 
   void _onItemTapped(int index) {
@@ -50,19 +50,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final member = authState.member;
+
+    if (authState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Theme.of(context).primaryColor,
         centerTitle: true,
-        title: const Text(
-          "GEMPEDIA",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          _selectedIndex == 2 ? "About Us" : "GEMPEDIA",
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
-          if (member != null)
+          if (authState.user != null && _selectedIndex != 2)
             IconButton(
                 onPressed: () => _logout(context),
                 icon: const Icon(Icons.logout))
@@ -89,50 +92,168 @@ class _HomePageState extends ConsumerState<HomePage> {
   List<Word> words = [];
   List<Word> filteredWords = [];
   TextEditingController searchController = TextEditingController();
-  String selectedLetter = ''; // Track selected letter
-  ScrollController _scrollController = ScrollController();
-  bool _isFabVisible = false; // Track FAB visibility
+  String selectedLetter = '';
+  final ScrollController _scrollController = ScrollController();
+  bool _isFabVisible = false;
+  bool _isConnected = true;
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
-  loadWords() {
-    API().getWords().then((value) => {
+  final WordCacheService _cacheService = WordCacheService();
+
+  bool _isInitialLoad = true;
+
+  Future<void> _initConnectivity() async {
+    try {
+      final result = await Connectivity().checkConnectivity();
+      _updateConnectionStatus(result.first);
+    } catch (e) {
+      print('Connectivity check failed: $e');
+    }
+  }
+
+  void _updateConnectionStatus(ConnectivityResult result) {
+    setState(() {
+      _isConnected = result != ConnectivityResult.none;
+      if (_isConnected && words.isEmpty) {
+        loadWords();
+      }
+    });
+  }
+
+  Future<void> loadWords() async {
+    final cachedWords = await _cacheService.getCachedWords();
+
+    if (cachedWords != null && cachedWords.isNotEmpty) {
+      setState(() {
+        words = cachedWords;
+        filteredWords = cachedWords;
+      });
+    }
+
+    if (_isConnected &&
+        (_isInitialLoad || cachedWords == null || cachedWords.isEmpty)) {
+      try {
+        final value = await API().getWords();
+        if (mounted) {
           setState(() {
             words = value;
-            filteredWords = value; // Initialize filteredWords with all words
-          })
+            filteredWords = value;
+            _isInitialLoad = false;
+          });
+          await _cacheService.cacheWords(value);
+        }
+      } catch (e) {
+        print('API error: $e');
+        if (mounted && cachedWords == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Failed to load words. Please check your connection.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> refreshWords() async {
+    if (!_isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Using cached data.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final value = await API().getWords();
+      if (mounted) {
+        setState(() {
+          words = value;
+          filteredWords = value;
         });
+        await _cacheService.cacheWords(value);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            // content: Text('Words updated successfully!'),
+            content: Text('Dictionary refreshed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update words. Please try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _filterWords() {
     final query = searchController.text.toLowerCase();
-    setState(() {
-      // Start by showing all words or filtering by the selected letter
-      if (selectedLetter.isEmpty || selectedLetter == 'all') {
-        filteredWords = words;
-      } else if (selectedLetter == 'numbers') {
-        // Filter words that start with a number
-        filteredWords = words
-            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn!))
-            .toList();
-      } else if (selectedLetter == 'symbols') {
-        // Filter words that start with a symbol
-        filteredWords = words
-            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn!))
-            .toList();
-      } else {
-        // Filter words by the selected alphabet letter
-        filteredWords = words
-            .where(
-                (word) => word.nameEn!.toLowerCase().startsWith(selectedLetter))
-            .toList();
-      }
+    if (query.isNotEmpty) {
+      setState(() {
+        // First apply letter filter if any
+        if (selectedLetter.isEmpty || selectedLetter == 'all') {
+          filteredWords = words;
+        } else if (selectedLetter == 'numbers') {
+          filteredWords = words
+              .where((word) => RegExp(r'^[0-9]')
+                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
+              .toList();
+        } else if (selectedLetter == 'symbols') {
+          filteredWords = words
+              .where((word) => RegExp(r'^[^a-zA-Z0-9]')
+                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
+              .toList();
+        } else {
+          filteredWords = words
+              .where((word) => word.nameEn!
+                  .replaceAll(RegExp(r'<\/?p>'), '')
+                  .toLowerCase()
+                  .startsWith(selectedLetter))
+              .toList();
+        }
 
-      // Now apply the search query on top of the filtered result
-      if (query.isNotEmpty) {
+        // Then apply search filter
         filteredWords = filteredWords
-            .where((word) => word.nameEn!.toLowerCase().startsWith(query))
+            .where((word) => word.nameEn!
+                .replaceAll(RegExp(r'<\/?p>'), '')
+                .toLowerCase()
+                .startsWith(query))
             .toList();
-      }
-    });
+      });
+    } else {
+      setState(() {
+        // Your existing filter logic for empty query
+        if (selectedLetter.isEmpty || selectedLetter == 'all') {
+          filteredWords = words;
+        } else if (selectedLetter == 'numbers') {
+          filteredWords = words
+              .where((word) => RegExp(r'^[0-9]')
+                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
+              .toList(); // Show words starting with numbers
+        } else if (selectedLetter == 'symbols') {
+          filteredWords = words
+              .where((word) => RegExp(r'^[^a-zA-Z0-9]')
+                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
+              .toList(); // Show words starting with symbols
+        } else {
+          filteredWords = words
+              .where((word) => word.nameEn!
+                  .replaceAll(RegExp(r'<\/?p>'), '')
+                  .startsWith(selectedLetter))
+              .toList(); // Show words starting with selected letter
+        }
+      });
+    }
   }
 
   void _filterByLetter(String letter) {
@@ -142,15 +263,19 @@ class _HomePageState extends ConsumerState<HomePage> {
         filteredWords = words; // Show all words
       } else if (letter == 'numbers') {
         filteredWords = words
-            .where((word) => RegExp(r'^[0-9]').hasMatch(word.nameEn!))
+            .where((word) => RegExp(r'^[0-9]')
+                .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
             .toList(); // Show words starting with numbers
       } else if (letter == 'symbols') {
         filteredWords = words
-            .where((word) => RegExp(r'^[^a-zA-Z0-9]').hasMatch(word.nameEn!))
+            .where((word) => RegExp(r'^[^a-zA-Z0-9]')
+                .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
             .toList(); // Show words starting with symbols
       } else {
         filteredWords = words
-            .where((word) => word.nameEn!.startsWith(letter))
+            .where((word) => word.nameEn!
+                .replaceAll(RegExp(r'<\/?p>'), '')
+                .startsWith(letter))
             .toList(); // Show words starting with selected letter
       }
     });
@@ -159,10 +284,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    loadWords();
-    searchController.addListener(_filterWords);
 
-    // Listen to scroll changes and show/hide the floating button
+    // Initialize connectivity checking
+    _initConnectivity();
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((results) {
+      // Handle the first result from the list
+      if (results.isNotEmpty) {
+        _updateConnectionStatus(results.first);
+      }
+    });
+
+    loadWords();
+    searchController.addListener(() {
+      _filterWords();
+      setState(() {}); // Rebuild to show/hide clear icon
+    });
     _scrollController.addListener(() {
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
@@ -180,6 +317,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   void dispose() {
+    _connectivitySubscription.cancel();
     searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -243,95 +381,127 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  void _onSearchSubmitted(String value) {
+    if (value.isNotEmpty) {
+      ref.read(recentSearchesProvider.notifier).addSearch(value.toLowerCase());
+      _filterWords();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return words.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : Stack(
-            children: [
-              Column(
-                children: [
-                  // Alphabet filter buttons
-                  // SizedBox(
-                  //   height: 50,
-                  //   child: ListView.builder(
-                  //     scrollDirection: Axis.horizontal,
-                  //     itemCount: 26,
-                  //     itemBuilder: (context, index) {
-                  //       final letter = String.fromCharCode(65 + index); // A-Z
-                  //       return Padding(
-                  //         padding: const EdgeInsets.all(4.0),
-                  //         child: ElevatedButton(
-                  //           onPressed: () {
-                  //             _filterByLetter(letter.toLowerCase());
-                  //           },
-                  //           child: Text(letter),
-                  //         ),
-                  //       );
-                  //     },
-                  //   ),
-                  // ),
-                  Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextField(
-                        controller: searchController,
-                        decoration: const InputDecoration(
-                            labelText: 'Search gem dictionary...',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.search)),
-                      )),
-                  // Display the filtered selection and total word count with background color
-                  Padding(
-                    padding: const EdgeInsets.all(0.0),
-                    child: Container(
-                      color: const Color.fromARGB(
-                          255, 45, 66, 87), // Apply background color
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0,
-                          horizontal: 16.0), // Add padding inside the container
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Filtered: ${selectedLetter.isEmpty ? 'All' : (selectedLetter == 'numbers' ? 'Number' : (selectedLetter == 'symbols' ? 'Symbol' : selectedLetter.toUpperCase()))}',
-                            style: const TextStyle(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors
-                                  .white, // Text color to contrast the background
-                            ),
-                          ),
-                          Text(
-                            'Total: ${filteredWords.length}',
-                            style: const TextStyle(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors
-                                  .white, // Text color to contrast the background
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+    if (!_isConnected && words.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.signal_wifi_off,
+              size: 64,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No Internet Connection',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please check your connection and try again',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: loadWords,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
 
-                  Expanded(
-                      child: WordList(
-                    list: filteredWords,
-                    scrollController: _scrollController,
-                  ))
-                ],
-              ),
-              if (_isFabVisible)
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    onPressed: _showAlphabetFilterDialog,
-                    child: const Icon(Icons.filter_list),
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: refreshWords,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    labelText: 'Search gem dictionary...',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              searchController.clear();
+                              _filterWords();
+                            },
+                          )
+                        : null,
                   ),
                 ),
+              ),
+              // Display the filtered selection and total word count with background color
+              Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: Container(
+                  color: const Color.fromARGB(
+                      255, 45, 66, 87), // Apply background color
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8.0,
+                      horizontal: 16.0), // Add padding inside the container
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filtered: ${selectedLetter.isEmpty ? 'All' : (selectedLetter == 'numbers' ? 'Number' : (selectedLetter == 'symbols' ? 'Symbol' : selectedLetter.toUpperCase()))}',
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors
+                              .white, // Text color to contrast the background
+                        ),
+                      ),
+                      Text(
+                        'Total: ${filteredWords.length}',
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors
+                              .white, // Text color to contrast the background
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: words.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : WordList(
+                        list: filteredWords,
+                        scrollController: _scrollController,
+                      ),
+              ),
             ],
-          );
+          ),
+        ),
+        if (_isFabVisible)
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: _showAlphabetFilterDialog,
+              child: const Icon(Icons.filter_list),
+            ),
+          ),
+      ],
+    );
   }
 }

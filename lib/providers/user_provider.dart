@@ -5,11 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProvider with ChangeNotifier {
-  UserElement? _user;
+  UserModel? _user;
 
-  UserElement? get user => _user;
+  UserModel? get user => _user;
 
-  Future<void> _saveUserToPrefs(UserElement user) async {
+  Future<void> _saveUserToPrefs(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('user', jsonEncode(user.toJson()));
   }
@@ -19,7 +19,7 @@ class UserProvider with ChangeNotifier {
     prefs.remove('user');
   }
 
-  Future<void> login(UserElement user) async {
+  Future<void> login(UserModel user) async {
     _user = user;
     notifyListeners();
     await _saveUserToPrefs(user);
@@ -35,7 +35,7 @@ class UserProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString('user');
     if (userData!.isNotEmpty) {
-      _user = UserElement.fromJson(jsonDecode(userData));
+      _user = UserModel.fromJson(jsonDecode(userData));
       notifyListeners();
     }
   }

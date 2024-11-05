@@ -1,71 +1,40 @@
 import 'dart:convert';
 import 'package:dic_app_flutter/models/member.dart';
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 class AuthAPI {
+  final Dio _dio = Dio();
   // final String _baseUrl = "https://dummyjson.com";
   // final String _baseUrl = "http://192.168.9.144";
   final String _baseUrl = "https://localhost:44378";
+  final String _baseUrlProduction = "http://122.155.9.144";
 
-  Future<dynamic> login(String username, String password) async {
-    try {
-      // username = 'emilys';
-      // password = 'emilyspass';
-
-      final url = Uri.parse('$_baseUrl/api/auth/signin');
-      // final url = Uri.parse('$_baseUrl/auth/login');
-
-      print(
-          'Login attempt with username: $username, password: $password, url: $url');
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
-      );
-
-      print('login_auth_api status code: ${response.statusCode}');
-      print('login_auth_api body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        // Assuming the response body is in JSON format
-        return jsonDecode(response.body);
-      } else {
-        // Handle different HTTP status codes
-        return {
-          'status': response.statusCode,
-          'message': 'Login failed',
-          'details': jsonDecode(response.body)
-        };
-      }
-    } catch (e) {
-      print('Error during login: $e');
-      return {'error': e.toString()};
-    }
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    final response =
+        await _dio.post('$_baseUrlProduction/api/auth/signin', data: {
+      'Email': username,
+      'Password': password,
+    });
+    print('authAPI_LOGIN: ${response.data}');
+    return response.data;
   }
 
-  Future<dynamic> register(Member member) async {
-    try {
-      final url = Uri.parse('$_baseUrl/api/auth/register');
+  Future<Map<String, dynamic>> register(
+      String username, String email, String password) async {
+    final response =
+        await _dio.post('$_baseUrlProduction/api/auth/signup', data: {
+      'username': username,
+      'email': email,
+      'password': password,
+    });
+    return response.data;
+  }
 
-      print(
-          'Register attempt with username: ${member.username}, email: ${member.email}');
-
-      final response = await http.post(url,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode(
-              {'username': member.username, 'password': member.username}));
-    } catch (e) {
-      print('Error during register: $e');
-      return {'error': e.toString()};
-    }
+  Future<Map<String, dynamic>> signInWithGoogle() async {
+    // Implement Google Sign-In logic here
+    // This should return the same format as the regular login
+    return {};
   }
 }
 

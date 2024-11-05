@@ -5,6 +5,7 @@ import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:dic_app_flutter/network/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:dic_app_flutter/components/media_view_dialog.dart';
 
 class WordDetail extends StatefulWidget {
   Word? word;
@@ -27,169 +28,260 @@ class _WordDetailState extends State<WordDetail> {
     loadWordDetail();
   }
 
-  // Function to load word details by ID
   Future<void> loadWordDetail() async {
     try {
-      // Fetch the word detail by ID
       List<Word> wordDetails = await API().getWordDetailById(widget.word!.id);
-
       setState(() {
-        word =
-            wordDetails.first; // Assuming there's only one word in the result
-        // print(word);
-        isLoading = false; // Data loaded, stop loading indicator
+        word = wordDetails.first;
+        isLoading = false;
       });
     } catch (e) {
-      // Handle any errors here
       setState(() {
-        isLoading = false; // Stop loading even if there's an error
+        isLoading = false;
       });
-      // print('Error fetching word details: $e');
     }
+  }
+
+  Widget _buildLanguageSection({
+    required String title,
+    required String name,
+    required String description,
+    required IconData icon,
+  }) {
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.blue[700], size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: widget.textSize * 0.8,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Html(
+                  data: name,
+                  style: {
+                    "p": Style(
+                      fontSize: FontSize(widget.textSize),
+                      fontWeight: FontWeight.bold,
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                    ),
+                  },
+                ),
+                if (description.isNotEmpty) ...[
+                  const Divider(height: 12),
+                  Html(
+                    data: description,
+                    style: {
+                      "p": Style(
+                        fontSize: FontSize(widget.textSize),
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaSection(List<MediaFile> mediaFiles) {
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.photo_library, color: Colors.blue[700], size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  'Media Gallery',
+                  style: TextStyle(
+                    fontSize: widget.textSize * 0.8,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Media Content
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: SizedBox(
+              height: 200,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: mediaFiles.length,
+                itemBuilder: (context, index) {
+                  final mediaFile = mediaFiles[index];
+                  return Card(
+                    elevation: 1,
+                    margin: const EdgeInsets.only(right: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Container(
+                      width: 180,
+                      padding: const EdgeInsets.all(6),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return MediaViewDialog(
+                                        mediaFiles: mediaFiles,
+                                        initialIndex: index,
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Hero(
+                                  tag: mediaFile.filePath,
+                                  child: Image.network(
+                                    mediaFile.filePath,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.error),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (mediaFile.description.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              mediaFile.description,
+                              style: TextStyle(
+                                fontSize: widget.textSize * 0.7,
+                                color: Colors.grey[700],
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
-
     if (isLoading) {
-      return const Center(
-          child: CircularProgressIndicator()); // Show loading indicator
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (word == null) {
-      return const Center(
-          child:
-              Text("Word not found!")); // Handle case where word is not found
+      return const Center(child: Text("Word not found!"));
     }
 
-// Extract media files from the word model
-    // List<String> mediaImages = word?.mediaFiles
-    //         ?.where((mediaFile) => mediaFile.fileType == 'image')
-    //         .map<String>((mediaFile) => mediaFile.filePath)
-    //         .toList() ??
-    //     [];
     List<MediaFile> mediaFiles = word?.mediaFiles ?? [];
-    // print(word?.mediaFiles);
 
     return Padding(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
       child: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              widget.word!.nameEn!,
-              style: TextStyle(fontSize: widget.textSize),
+          children: [
+            // English Section
+            _buildLanguageSection(
+              title: 'English',
+              name: widget.word!.nameEn ?? '',
+              description: widget.word!.despEn ?? '',
+              icon: Icons.language,
             ),
-            SizedBox(height: size.height * 0.03),
-            // Text(widget.word!.despEn),
-            Html(
-              data: widget.word!.despEn,
-              style: {
-                // Customize any HTML tags' styles here, e.g., <sub> or <p>
-                "p": Style(
-                  fontSize: FontSize(widget.textSize),
-                ),
-              },
-            ),
-            SizedBox(height: size.height * 0.03),
 
-            // Display media (both images and videos) with descriptions
-            if (mediaFiles.isNotEmpty)
-              SizedBox(
-                height: 250,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: mediaFiles.length,
-                  itemBuilder: (context, index) {
-                    final mediaFile = mediaFiles[index];
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          if (mediaFile.fileType == 'image')
-                            GestureDetector(
-                              onTap: () {
-                                showImageViewDialog(
-                                    context, mediaFile.filePath);
-                              },
-                              child: Image.network(
-                                mediaFile.filePath,
-                                width: 150,
-                                height: 100,
-                                fit: BoxFit.contain,
-                              ),
-                            )
-                          else if (mediaFile.fileType == 'video')
-                            SizedBox(
-                              width: 150,
-                              height: 100,
-                              child: VideoViewer(videoUrl: mediaFile.filePath),
-                            ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            mediaFile.description,
-                            style: const TextStyle(fontSize: 12),
-                            textAlign: TextAlign.center,
-                          )
-                        ],
-                      ),
-                    );
-                    // return GestureDetector(
-                    //   onTap: () {
-                    //     showImageViewDialog(context, mediaImages[index]);
-                    //   },
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.all(8),
-                    //     child: Image.network(
-                    //       mediaImages[index],
-                    //       width: 100,
-                    //       fit: BoxFit.contain,
-                    //     ),
-                    //   ),
-                    // );
-                  },
-                ),
+            // Thai Section (if available)
+            if (widget.word!.nameTh?.isNotEmpty == true ||
+                widget.word!.despTh?.isNotEmpty == true)
+              _buildLanguageSection(
+                title: 'Thai',
+                name: widget.word!.nameTh ?? '',
+                description: widget.word!.despTh ?? '',
+                icon: Icons.translate,
               ),
-            SizedBox(height: size.height * 0.03),
 
-            // Row(
-            //   children: <Widget>[
-            //     Expanded(
-            //       child: SizedBox(
-            //         height: 120,
-            //         child: ListView.builder(
-            //           scrollDirection: Axis.horizontal,
-            //           itemCount: images.length,
-            //           itemBuilder: (context, i) {
-            //             return GestureDetector(
-            //               onTap: () {
-            //                 showImageViewDialog(context, images[i]);
-            //               },
-            //               child: Padding(
-            //                 padding: const EdgeInsets.all(8),
-            //                 child: Image.network(
-            //                   images[i],
-            //                   width: 250,
-            //                   fit: BoxFit.cover,
-            //                 ),
-            //               ),
-            //             );
-            //           },
-            //         ),
-            //       ),
-            //     )
-            //   ],
-            // ),
-            // SizedBox(height: size.height * 0.03),
-            // const Center(
-            //   child: VideoViewer(
-            //       videoUrl:
-            //           'https://d3bh4clrfrmqaj.cloudfront.net/vids/qm_myanmar_ruby.mp4'),
-            // ),
+            // Chinese Section (if available)
+            if (widget.word!.nameCn?.isNotEmpty == true ||
+                widget.word!.despCn?.isNotEmpty == true)
+              _buildLanguageSection(
+                title: 'Chinese',
+                name: widget.word!.nameCn ?? '',
+                description: widget.word!.despCn ?? '',
+                icon: Icons.translate,
+              ),
+
+            // Media Section
+            if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
           ],
         ),
       ),

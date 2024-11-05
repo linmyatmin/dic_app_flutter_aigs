@@ -1,151 +1,126 @@
-import 'package:dic_app_flutter/screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
+import 'package:dic_app_flutter/screens/subscription_screen.dart';
+import 'package:dic_app_flutter/screens/login_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+import 'home_screen.dart';
 
-  @override
-  _ProfileScreenState createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  File? _image;
-  final picker = ImagePicker();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await picker.pickImage(source: source);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
-  }
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final currentUser = authState.user;
+    final primaryColor = Theme.of(context).primaryColor;
+    final textColor =
+        Theme.of(context).primaryTextTheme.titleLarge?.color ?? Colors.white;
+
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Please log in to view your profile.'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: primaryColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          ),
+        ),
         title: const Text(
           'Profile',
           style: TextStyle(color: Colors.white),
         ),
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.edit),
+        //     onPressed: () {
+        //       // TODO: Implement edit profile functionality
+        //     },
+        //   ),
+        // ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () async {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            ListTile(
-                              leading: const Icon(Icons.photo_library),
-                              title: const Text('Photo Library'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImage(ImageSource.gallery);
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.photo_camera),
-                              title: const Text('Camera'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImage(ImageSource.camera);
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    });
-              },
+            Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.grey.shade200,
-                backgroundImage: _image != null ? FileImage(_image!) : null,
-                child: _image == null
-                    ? const Icon(
-                        Icons.camera_alt,
-                        color: Colors.grey,
-                        size: 50,
-                      )
-                    : null,
+                backgroundImage: NetworkImage(
+                    currentUser.image ?? 'https://via.placeholder.com/150'),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            RichText(
-              text: TextSpan(
-                style: DefaultTextStyle.of(context).style,
-                children: const <TextSpan>[
-                  TextSpan(
-                      text: 'Current plan: ', style: TextStyle(fontSize: 16)),
-                  TextSpan(
-                      text: 'Free',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Subscribed on: 15 Jun 2024',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Expired on: 15 Jul 2024',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: () {
-                // Add your see more plans action here
+            const SizedBox(height: 24),
+            _buildInfoTile(context, 'Username', currentUser.userName),
+            _buildInfoTile(context, 'Email', currentUser.email),
+            _buildInfoTile(context, 'Subscription Plan',
+                currentUser.subscriptionPlanId.toString() ?? 'Free'),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const SubscriptionScreen()),
+                  MaterialPageRoute(builder: (context) => SubscriptionScreen()),
                 );
               },
-              child: const Text(
-                'See more plans',
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
-                  fontSize: 16,
-                ),
+              child: Text('Manage Subscription'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+              ),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                await ref.read(authProvider.notifier).signOut();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              child: Text('Sign Out'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+                primary: Colors.red,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(BuildContext context, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.caption,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: Theme.of(context)
+                .textTheme
+                .subtitle1
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const Divider(),
+        ],
       ),
     );
   }

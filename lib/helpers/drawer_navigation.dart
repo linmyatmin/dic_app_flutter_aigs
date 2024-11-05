@@ -2,97 +2,115 @@ import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/aboutus_screen.dart';
 import 'package:dic_app_flutter/screens/profile_screen.dart';
 import 'package:dic_app_flutter/screens/register_screen.dart';
-import 'package:dic_app_flutter/screens/home_screen.dart';
 import 'package:dic_app_flutter/screens/setting_screen.dart';
+import 'package:dic_app_flutter/screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DrawerNavigation extends ConsumerStatefulWidget {
-  const DrawerNavigation({super.key});
+class DrawerNavigation extends ConsumerWidget {
+  const DrawerNavigation({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<DrawerNavigation> createState() => _DrawerNavigationState();
-}
-
-class _DrawerNavigationState extends ConsumerState<DrawerNavigation> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final member = authState.member;
-    final bool userLoggedIn = member != null ? true : false;
+    final member = authState.user;
+    final bool userLoggedIn = member != null;
 
-    return Container(
-      child: Drawer(
-        child: ListView(
-          children: <Widget>[
-            if (userLoggedIn)
-              UserAccountsDrawerHeader(
-                currentAccountPicture: CircleAvatar(
-                  backgroundImage: NetworkImage(
-                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEbU7_44vb0L45FVVdJ69vbG7eUatiAAbEpacifjBnHcoPaFjvhMA_H-WpVO_yMXMIBc0&usqp=CAU'),
-                ),
-                accountName: Text(member.username),
-                accountEmail: Text(member.email),
-                decoration:
-                    BoxDecoration(color: Theme.of(context).primaryColor),
-              )
-            else
-              Container(
-                padding: EdgeInsets.all(16.0),
-                decoration:
-                    BoxDecoration(color: Theme.of(context).primaryColor),
-                child: Text(
-                  'Welcome to GEMPEDIA',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
-            // ListTile(
-            //   leading: Icon(Icons.home),
-            //   title: Text('Home'),
-            //   onTap: () {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => const HomeScreen()),
-            //     );
-            //   },
-            // ),
-            ListTile(
-              leading: Icon(Icons.account_box),
-              title: Text('Profile'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ProfileScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SettingScreen()),
-                );
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.app_registration),
-              title: Text('Sign Up / Sign In'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const RegisterScreen()),
-                );
-              },
-            ),
-          ],
-        ),
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          _buildHeader(context, userLoggedIn, member),
+          ..._buildMenuItems(context, userLoggedIn),
+        ],
       ),
     );
+  }
+
+  Widget _buildHeader(BuildContext context, bool userLoggedIn, dynamic member) {
+    print('User logged in: $userLoggedIn');
+    print('Member data: $member');
+
+    return DrawerHeader(
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        image: DecorationImage(
+          image: AssetImage('assets/images/drawer_header_bg.jpg'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: userLoggedIn
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(
+                      member.image ?? 'https://via.placeholder.com/150'),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  member.userName,
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                Text(
+                  member.email,
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            )
+          : Center(
+              child: Text(
+                'Welcome to GEMPEDIA',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            ),
+    );
+  }
+
+  List<Widget> _buildMenuItems(BuildContext context, bool userLoggedIn) {
+    return [
+      if (userLoggedIn) ...[
+        _buildListTile(
+          icon: Icons.account_circle,
+          title: 'Profile',
+          onTap: () => _navigateTo(context, ProfileScreen()),
+        ),
+      ] else ...[
+        _buildListTile(
+          icon: Icons.login,
+          title: 'Sign In / Sign Up',
+          onTap: () => _navigateTo(context, RegisterScreen()),
+        ),
+      ],
+      _buildListTile(
+        icon: Icons.settings,
+        title: 'Settings',
+        onTap: () => _navigateTo(context, SettingScreen()),
+      ),
+      Divider(),
+      _buildListTile(
+        icon: Icons.info,
+        title: 'About Us',
+        onTap: () => _navigateTo(context, AboutUsScreen()),
+      ),
+    ];
+  }
+
+  ListTile _buildListTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      onTap: onTap,
+    );
+  }
+
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.pop(context); // Close the drawer
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
   }
 }

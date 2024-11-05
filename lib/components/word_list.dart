@@ -43,17 +43,30 @@ class _WordListState extends State<WordList> {
             // crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                  // flex: 1,
-                  child: Text(
-                widget.list[i].nameEn!,
-                textAlign: TextAlign.left,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.0,
+                // flex: 1,
+                //     child: Text(
+                //   widget.list[i].nameEn!,
+                //   textAlign: TextAlign.left,
+                //   maxLines: 1,
+                //   overflow: TextOverflow.ellipsis,
+                //   style: const TextStyle(
+                //     fontWeight: FontWeight.bold,
+                //     fontSize: 12.0,
+                //   ),
+                // )
+                child: Html(
+                  data:
+                      widget.list[i].nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
+                  style: {
+                    "p": Style(
+                      fontSize: FontSize(12.0),
+                      fontWeight: FontWeight.bold,
+                      textAlign: TextAlign.left,
+                      maxLines: 1,
+                    ),
+                  },
                 ),
-              )),
+              ),
               Expanded(
                 // flex: 2,
                 child: Html(

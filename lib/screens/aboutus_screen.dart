@@ -1,61 +1,150 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
-class AboutUsScreen extends StatefulWidget {
-  const AboutUsScreen({super.key});
+class AboutUsScreen extends StatelessWidget {
+  final bool showAppBar;
 
-  @override
-  State<AboutUsScreen> createState() => _AboutUsScreenState();
-}
-
-class _AboutUsScreenState extends State<AboutUsScreen> {
-  late final WebViewController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = WebViewController()
-      ..loadRequest(
-        Uri.parse('https://www.aigsthailand.com/dictionary_about_us.html'),
-      );
-  }
+  const AboutUsScreen({Key? key, this.showAppBar = true}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = screenWidth > 800 ? screenWidth * 0.2 : 20.0;
+    final primaryColor = Theme.of(context).primaryColor;
     return Scaffold(
-      body: WebViewWidget(
-        controller: controller,
+      backgroundColor: primaryColor,
+      appBar: showAppBar
+          ? AppBar(
+              title: const Text(
+                'About Us',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFF2A4D60),
+              iconTheme: const IconThemeData(color: Colors.white),
+            )
+          : null,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: padding, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'GEMPEDIA is a compendium of more than 7,300 terms and definitions gathered over decades by Rui Galopim de Carvalho FGA DGA, a renowned professional gemmologist and consultant with over 30 years of experience within the gems and jewellery trade in gem testing, education and science communication.',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'This compilation has been endorsed by Gem-A—The Gemmological Association of Great Britain, the world\'s longest-established provider of gem and jewellery education, and supported by the Asian Institute of Gemological Sciences (AIGS), one of Asia\'s first international gemmological institutes.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  height: 1.8,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'This glossary for gemstones and gemology was made for students, professionals, and gem and jewellery aficionados to provide the most comprehensive reference source for understanding and clarifying the wide-ranging terminology used across the fascinating world of gemmology and its associated industries.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  height: 1.8,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 40),
+              _buildQuoteSection(screenWidth),
+              const SizedBox(height: 40),
+              _buildLogos(screenWidth),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
-      // Padding(
-      //   padding: const EdgeInsets.all(16.0),
-      //   child: SingleChildScrollView(
-      //       child: Column(
-      //     crossAxisAlignment: CrossAxisAlignment.start,
-      //     children: <Widget>[
-      //       const Text(
-      //         'Gem Dictionary | 汉英宝石字典',
-      //         style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-      //       ),
-      //       const SizedBox(
-      //         height: 16.0,
-      //       ),
-      //       const Text(
-      //         'The English Chinese Gem Dictionary is the most complete resource of its kind, allowing industry professionals, students, and consumers alike to learn more about gemstones, no matter where they are!\n汉英宝石字典 是同类产品中最为完善的，使得行业内专业人士，学生，以及消费者能够学到更多的宝石学知识，无论何时何地！',
-      //         style: TextStyle(fontSize: 16.0),
-      //       ),
-      //       const SizedBox(height: 16.0),
-      //       const Text(
-      //         'The e-dictionary is based on Akira Chikayama’s seminal work, the Dictionary of Gemstones & Jewelry - which covers all facets of the subject; including scientific, technical and commercial terms, as well as those concerning the myths, superstition and lore traditionally associated with gemstones - and has been adapted by the Asian Institute of Gemological Sciences (AIGS) for use with electronic formats.\n此电子字典是基于日本宝石学家近山晶（Akira Chikayama）的开创性著作，《宝石宝饰大字典》。这本著作涵盖了宝石学的所有方面，包括科研、技术和商业，以及传说、迷信和与宝石有关的传统等等。AIGS则在此基础上将其改编成了便于使用的电子版本。',
-      //         style: TextStyle(fontSize: 16.0),
-      //       ),
-      //       const SizedBox(height: 16.0),
-      //       const Text(
-      //         'This application also allows for both English and Chinese language search inputs, as well as two-way translation between the two languages.\n此应用软件允许英语和中文两种语言的输入，并能够实现两种语言的双向翻译。',
-      //         style: TextStyle(fontSize: 16.0),
-      //       ),
-      //     ],
-      //   )),
-      // ),
+    );
+  }
+
+  Widget _buildQuoteSection(double screenWidth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildQuote(
+          '"This book is a must-have for anyone interested in gemmology"',
+          'Guy Lalous',
+          'Ambassador FEEG – Federation for European Education in Gemmology',
+        ),
+        const SizedBox(height: 15),
+        _buildQuote(
+          '"Not only a \'go to\' guide for gemmology, but one that can be entirely read and browsed to increase your own knowledge"',
+          'Alan Hart',
+          'CEO – Gem-A, The Gemmological Association of Great Britain',
+        ),
+        const SizedBox(height: 15),
+        _buildQuote(
+          '"It\'s really a great reference book for me and should be highly recommended to all gemmologists"',
+          'Edward Liu',
+          'Chairman – The Gemmological Association of Hong Kong',
+        ),
+        const SizedBox(height: 15),
+        _buildQuote(
+          '"This work of Rui Galopim, a renowned friend in gemmology, is highly admirable"',
+          'Pornsawat Wathanakul',
+          'former Director of GIT – Gem & Jewelry Institute of Thailand',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuote(String quote, String name, String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          quote,
+          style: const TextStyle(
+            fontSize: 14,
+            fontStyle: FontStyle.italic,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '$name, $title',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogos(double screenWidth) {
+    final logoSize = screenWidth > 600 ? 200.0 : screenWidth * 0.3;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Image.asset(
+          'assets/images/aigs_logo.png',
+          width: logoSize,
+          color: Colors.white,
+        ),
+        Image.asset(
+          'assets/images/gema_logo.png',
+          width: logoSize,
+          color: Colors.white,
+        ),
+      ],
     );
   }
 }
