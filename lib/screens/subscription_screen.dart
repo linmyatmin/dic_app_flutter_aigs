@@ -170,7 +170,7 @@ class SubscriptionScreen extends ConsumerWidget {
                           : () => _handleSubscription(
                               plan, ref.watch(authProvider)),
                       style: ElevatedButton.styleFrom(
-                        primary:
+                        backgroundColor:
                             isCurrentPlan ? Colors.grey.shade400 : primaryColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
