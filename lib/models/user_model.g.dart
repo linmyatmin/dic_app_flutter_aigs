@@ -44,6 +44,6 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'paymentMethod': instance.paymentMethod,
       'subscriptionPrice': instance.subscriptionPrice,
       'isTrial': instance.isTrial,
-      'trialEndDate': instance.trialEndDate.toIso8601String(),
+      'trialEndDate': instance.trialEndDate?.toIso8601String(),
       'active': instance.active,
     };

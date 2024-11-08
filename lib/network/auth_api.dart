@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dic_app_flutter/models/member.dart';
+import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 
@@ -9,6 +10,44 @@ class AuthAPI {
   // final String _baseUrl = "http://192.168.9.144";
   final String _baseUrl = "https://localhost:44378";
   final String _baseUrlProduction = "http://122.155.9.144";
+
+  Future<UserModel> getUserData(String? userId, String? token) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            "$_baseUrlProduction/api/auth/GetUserData/$userId"), // Adjust the endpoint as needed
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any necessary authentication headers here, e.g., 'Authorization': 'Bearer $token'
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response body
+        final responseData = json.decode(response.body);
+
+        // Check if the response indicates success
+        if (responseData['success'] == true) {
+          // Extract the user data
+          final userData = responseData['data'];
+
+          print(userData);
+
+          return UserModel.fromJson(
+              userData); // Assuming you have a User model with a fromJson method
+        } else {
+          throw Exception(
+              'Failed to fetch user data: ${responseData['message']}');
+        }
+      } else {
+        throw Exception('Failed to fetch user data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+      throw Exception('Error fetching user data: $e');
+    }
+  }
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {

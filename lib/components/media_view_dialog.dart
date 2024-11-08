@@ -69,13 +69,13 @@ class _MediaViewDialogState extends State<MediaViewDialog> {
                         : VideoViewer(videoUrl: mediaFile.filePath),
                   ),
                   // Description
-                  if (mediaFile.description.isNotEmpty)
+                  if (mediaFile.description?.isNotEmpty == true)
                     Container(
                       padding: const EdgeInsets.all(16),
                       color: Colors.black.withOpacity(0.5),
                       width: double.infinity,
                       child: Text(
-                        mediaFile.description,
+                        mediaFile.description ?? '',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,

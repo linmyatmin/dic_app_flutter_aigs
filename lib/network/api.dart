@@ -61,7 +61,7 @@ class API {
   // }
 
   Future<List<Word>> getWords() async {
-    final response = await http.get(Uri.parse("$_baseUrl/words"));
+    final response = await http.get(Uri.parse("$_baseUrl2/words"));
 
     print(response.statusCode);
     print(response.body);
@@ -103,20 +103,18 @@ class API {
   //   }
   // }
 
-  Future<List<Word>> getWordDetailById(String id) async {
-    final response = await http.get(Uri.parse("$_baseUrl/words/$id"));
+  Future<List<Word>> getWordDetailById(int id) async {
+    final response = await http.get(Uri.parse("$_baseUrl2/words/$id"));
 
     print(response.statusCode);
-    print(response.body);
+    print(response.body); // Log the entire response
 
     if (response.statusCode == 200) {
       var jsonResp = json.decode(response.body);
 
       if (jsonResp is Map<String, dynamic>) {
-        // Handle the case where it's a single word object
-        return [
-          Word.fromJson(jsonResp['data'])
-        ]; // Make sure to access the 'data' field
+        // Directly return the Word object from the response
+        return [Word.fromJson(jsonResp)]; // No need to access 'data'
       } else {
         throw Exception('Unexpected response format!');
       }
@@ -188,6 +186,44 @@ class API {
         throw errorMessage;
       }
       throw e.toString();
+    }
+  }
+
+  Future<Map<String, dynamic>> createUserSubscription(
+      String userId, int planId, String paymentId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$_baseUrl2/UserSubscriptions/PostUserSubscription"),
+        headers: {
+          'Content-Type': 'application/json', // Set the content type
+        },
+        body: json.encode({
+          'UserId': userId,
+          'PlanId': planId,
+          'PaymentIntentId': paymentId,
+        }),
+      );
+
+      print(json.encode({
+        'UserId': userId,
+        'PlanId': planId,
+        'PaymentIntentId': paymentId,
+      }));
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.body}');
+
+      // if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Parse the response body and return the subscription data
+        return json.decode(response.body);
+      } else {
+        throw Exception(
+            'Failed to create subscription: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+      throw Exception('Error creating subscription: $e');
     }
   }
 }

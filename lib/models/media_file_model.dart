@@ -1,18 +1,18 @@
 import 'dart:convert';
 
 class MediaFile {
-  String mediaId;
+  int mediaId;
   String fileType;
   String filePath;
-  String fileName;
-  String description;
+  String? fileName; // Nullable
+  String? description; // Nullable
 
   MediaFile({
     required this.mediaId,
     required this.fileType,
     required this.filePath,
-    required this.fileName,
-    required this.description,
+    this.fileName, // Nullable
+    this.description, // Nullable
   });
 
   factory MediaFile.fromRawJson(String str) =>
@@ -21,11 +21,15 @@ class MediaFile {
   String toRawJson() => json.encode(toJson());
 
   factory MediaFile.fromJson(Map<String, dynamic> json) => MediaFile(
-        mediaId: json["media_id"],
+        // mediaId: json["media_id"],
+        mediaId: json['media_id'] is String
+            ? int.parse(json['media_id'])
+            : json['media_id'], // Convert if necessary
         fileType: json["file_type"],
         filePath: json["file_path"],
-        fileName: json["file_name"],
-        description: json["description"],
+        fileName: json["file_name"] as String? ?? '', // Cast to nullable String
+        description:
+            json["description"] as String? ?? '', // Cast to nullable String
       );
 
   Map<String, dynamic> toJson() => {

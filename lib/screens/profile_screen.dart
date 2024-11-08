@@ -1,3 +1,4 @@
+import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
@@ -6,11 +7,41 @@ import 'package:dic_app_flutter/screens/login_screen.dart';
 
 import 'home_screen.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch user data only once when the screen is loaded
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    final authState = ref.read(authProvider);
+    final currentUser = authState.user;
+    print('Current User Token: ${currentUser?.token}');
+    print('_fetchUserData is called...');
+    final userid = currentUser?.userId;
+    final token = currentUser?.token;
+    if (userid != null) {
+      try {
+        final userData = await AuthAPI().getUserData(userid, token);
+        print(userData);
+        ref.read(authProvider.notifier).updateUser(userData);
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.user;
     final primaryColor = Theme.of(context).primaryColor;
@@ -89,8 +120,6 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 32),
             _buildInfoTile(context, 'Username', currentUser.userName),
             _buildInfoTile(context, 'Email', currentUser.email),
-            // _buildInfoTile(context, 'Subscription Plan',
-            //     'Plan ${currentUser.subscriptionPlanId.toString()}'),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {

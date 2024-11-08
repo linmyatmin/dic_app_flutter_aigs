@@ -1,5 +1,5 @@
 plugins {
-    id "com.android.application"
+   id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -32,6 +32,7 @@ android {
     namespace "com.aigs.gempedia"
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
+    // ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -51,8 +52,10 @@ android {
         applicationId "com.aigs.gempedia"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        compileSdkVersion 34
-        minSdkVersion flutter.minSdkVersion
+        // compileSdkVersion 34
+        // minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
+        // minSdkVersion 23
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -69,7 +72,12 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            // signingConfig signingConfigs.release
+          // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.debug
+   
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
 }
@@ -78,4 +86,7 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    // implementation 'com.stripe:stripe-android:20.44.2'
+    // implementation 'com.stripe:stripe-android:21.0.0'
+}

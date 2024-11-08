@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dic_app_flutter/models/subscription_plan_model.dart';
 import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:dic_app_flutter/services/secure_storage_service.dart';
@@ -81,10 +82,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
           userId: user.userId,
           user: user,
         );
+
+        // fetch the latest user data from the backend
+        await fetchUserData();
       }
     } catch (e) {
       print('Error checking stored user: $e');
       await logout();
+    }
+  }
+
+  Future<void> fetchUserData() async {
+    try {
+      // Fetch user data from backend
+      final updatedUser = await authAPI.getUserData(state.userId, state.token);
+      state = state.copyWith(user: updatedUser);
+    } catch (e) {
+      print('Error fetching user data: $e');
     }
   }
 
@@ -251,6 +265,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       throw errorMessage;
     }
+  }
+
+  Future<void> updateUserSubscription(
+      Map<String, dynamic> subscriptionData) async {
+    try {
+      // Assuming you have a method to parse the subscription data into a Subscription object
+      final updatedSubscription =
+          SubscriptionPlan.fromJson(subscriptionData['subscriptionPlan']);
+
+      print('updatedSubscription: $updatedSubscription');
+
+      // Update the user state with the new subscription information
+      state = state.copyWith(
+        user: state.user?.copyWith(
+            // subscriptionPlanId: updatedSubscription.subscriptionPlanId,
+            subscriptionPlanId: updatedSubscription.id,
+            // Update other fields as necessary
+            subscriptionPrice: updatedSubscription.price),
+      );
+    } catch (e) {
+      print('Error updating user subscription: $e');
+    }
+  }
+
+  void updateUser(UserModel user) {
+    state = state.copyWith(user: user);
   }
 }
 

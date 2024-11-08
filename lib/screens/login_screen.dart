@@ -1,4 +1,5 @@
 //new 23-07-2024
+import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:dic_app_flutter/screens/home_screen.dart';
 import 'package:dic_app_flutter/utils/validator.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +16,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // final TextEditingController usernameController =
-  //     TextEditingController(text: 'lin@aigsthailand.com');
-  // final TextEditingController passwordController =
-  //     TextEditingController(text: '123456');
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController =
+      TextEditingController(text: 'lin@aigsthailand.com');
+  final TextEditingController passwordController =
+      TextEditingController(text: 'AdminPassword123!');
+  // final TextEditingController usernameController = TextEditingController();
+  // final TextEditingController passwordController = TextEditingController();
 
   bool _showPassword = false;
 
@@ -32,6 +33,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             usernameController.text.trim(),
             passwordController.text,
           );
+
+      // // Fetch user data after successful login
+      // final currentUser = ref.read(authProvider).user;
+      // if (currentUser != null) {
+      //   final userData = await AuthAPI().getUserData(currentUser.userId);
+      //   ref.read(authProvider.notifier).updateUser(userData);
+      // }
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeScreen()),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 class SubscriptionPlan {
   final int id;
@@ -13,21 +14,22 @@ class SubscriptionPlan {
   final String? createBy;
   final DateTime updateDate;
   final String? updateBy;
+  final String? stripePriceId;
 
-  SubscriptionPlan({
-    required this.id,
-    required this.name,
-    this.description,
-    required this.price,
-    required this.duration,
-    required this.durationUnit,
-    this.features,
-    required this.active,
-    required this.createDate,
-    this.createBy,
-    required this.updateDate,
-    this.updateBy,
-  });
+  SubscriptionPlan(
+      {required this.id,
+      required this.name,
+      this.description,
+      required this.price,
+      required this.duration,
+      required this.durationUnit,
+      this.features,
+      required this.active,
+      required this.createDate,
+      this.createBy,
+      required this.updateDate,
+      this.updateBy,
+      this.stripePriceId});
 
   factory SubscriptionPlan.fromRawJson(String str) =>
       SubscriptionPlan.fromJson(json.decode(str));
@@ -48,6 +50,7 @@ class SubscriptionPlan {
       createBy: json['createBy'] as String?,
       updateDate: DateTime.parse(json['updateDate'] as String),
       updateBy: json['updateBy'] as String?,
+      stripePriceId: json['stripePriceId'],
     );
   }
 
@@ -64,5 +67,6 @@ class SubscriptionPlan {
         'createBy': createBy,
         'updateDate': updateDate.toIso8601String(),
         'updateBy': updateBy,
+        'stripePriceId': stripePriceId,
       };
 }

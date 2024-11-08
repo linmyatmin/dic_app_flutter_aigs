@@ -8,8 +8,8 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:dic_app_flutter/components/media_view_dialog.dart';
 
 class WordDetail extends StatefulWidget {
-  Word? word;
-  double textSize;
+  final Word? word;
+  final double textSize;
 
   WordDetail({Key? key, required this.word, required this.textSize})
       : super(key: key);
@@ -18,9 +18,12 @@ class WordDetail extends StatefulWidget {
   State<WordDetail> createState() => _WordDetailState();
 }
 
-class _WordDetailState extends State<WordDetail> {
-  Word? word;
+class _WordDetailState extends State<WordDetail>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool isLoading = true;
+  Word? word;
+  List<Map<String, String>> descriptions = [];
 
   @override
   void initState() {
@@ -30,80 +33,95 @@ class _WordDetailState extends State<WordDetail> {
 
   Future<void> loadWordDetail() async {
     try {
+      print('Loading word detail for ID: ${widget.word!.id}');
       List<Word> wordDetails = await API().getWordDetailById(widget.word!.id);
-      setState(() {
-        word = wordDetails.first;
-        isLoading = false;
-      });
+
+      if (wordDetails.isNotEmpty) {
+        setState(() {
+          word = wordDetails.first;
+          isLoading = false;
+
+          // Prepare descriptions, filtering out null values
+          descriptions = [
+            {
+              'name': 'EN',
+              'title': 'English',
+              'description': word!.despEn ?? ''
+            },
+            {'name': 'TH', 'title': 'Thai', 'description': word!.despTh ?? ''},
+            {
+              'name': 'CN',
+              'title': 'Chinese',
+              'description': word!.despCn ?? ''
+            },
+            {
+              'name': 'FR',
+              'title': 'French',
+              'description': word!.despFr ?? ''
+            },
+            {
+              'name': 'SP',
+              'title': 'Spanish',
+              'description': word!.despSp ?? ''
+            },
+            {
+              'name': 'JP',
+              'title': 'Japanese',
+              'description': word!.despJp ?? ''
+            },
+          ]
+              .where((desc) => desc['description']!.isNotEmpty)
+              .toList(); // Filter out null descriptions
+
+          // Initialize TabController with the number of valid descriptions
+          _tabController =
+              TabController(length: descriptions.length, vsync: this);
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          word = null;
+        });
+        print('No word details found for ID: ${widget.word!.id}');
+      }
     } catch (e) {
       setState(() {
         isLoading = false;
+        word = null;
       });
+      print('Error loading word detail: $e');
     }
   }
 
-  Widget _buildLanguageSection({
-    required String title,
-    required String name,
-    required String description,
-    required IconData icon,
-  }) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: Colors.blue[700], size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  title,
+  Widget _buildSwipeableDescriptions() {
+    return TabBarView(
+      controller: _tabController,
+      children: descriptions.map((desc) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.blue[100], // Background color for the title
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  desc['title']!,
                   style: TextStyle(
-                    fontSize: widget.textSize * 0.8,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.blue[700],
+                    fontSize: 14, // Slightly smaller font size
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black, // Title text color
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Html(
-                  data: name,
-                  style: {
-                    "p": Style(
-                      fontSize: FontSize(widget.textSize),
-                      fontWeight: FontWeight.bold,
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                    ),
-                  },
-                ),
-                if (description.isNotEmpty) ...[
-                  const Divider(height: 12),
-                  Html(
-                    data: description,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Html(
+                    data: desc['description'],
                     style: {
                       "p": Style(
                         fontSize: FontSize(widget.textSize),
@@ -112,11 +130,48 @@ class _WordDetailState extends State<WordDetail> {
                       ),
                     },
                   ),
-                ],
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        );
+      }).toList(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (word == null) {
+      return const Center(child: Text("Word not found!"));
+    }
+
+    List<MediaFile> mediaFiles = word?.mediaFiles ?? [];
+
+    return DefaultTabController(
+      length: descriptions.length, // Number of valid tabs
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              // TabBar for language selection
+              TabBar(
+                controller: _tabController,
+                tabs: descriptions.map((desc) {
+                  return Tab(text: desc['name']);
+                }).toList(),
+              ),
+              // Swipeable Descriptions
+              Expanded(child: _buildSwipeableDescriptions()),
+              // Media Section
+              if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -131,7 +186,6 @@ class _WordDetailState extends State<WordDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
@@ -156,73 +210,42 @@ class _WordDetailState extends State<WordDetail> {
               ],
             ),
           ),
-
-          // Media Content
           Padding(
             padding: const EdgeInsets.all(8),
-            child: SizedBox(
-              height: 200,
+            child: Container(
+              height: 150, // Set a fixed height for the horizontal scroll area
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: mediaFiles.length,
                 itemBuilder: (context, index) {
                   final mediaFile = mediaFiles[index];
-                  return Card(
-                    elevation: 1,
-                    margin: const EdgeInsets.only(right: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Container(
-                      width: 180,
-                      padding: const EdgeInsets.all(6),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return MediaViewDialog(
-                                        mediaFiles: mediaFiles,
-                                        initialIndex: index,
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Hero(
-                                  tag: mediaFile.filePath,
-                                  child: Image.network(
-                                    mediaFile.filePath,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey[200],
-                                        child: const Icon(Icons.error),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (mediaFile.description.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              mediaFile.description,
-                              style: TextStyle(
-                                fontSize: widget.textSize * 0.7,
-                                color: Colors.grey[700],
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
+                  return GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return MediaViewDialog(
+                            mediaFiles: mediaFiles,
+                            initialIndex: index,
+                          );
+                        },
+                      );
+                    },
+                    child: Card(
+                      elevation: 1,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          mediaFile.filePath,
+                          fit: BoxFit.cover,
+                          width: 100, // Set a fixed width for each media item
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.error),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   );
@@ -231,59 +254,6 @@ class _WordDetailState extends State<WordDetail> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (word == null) {
-      return const Center(child: Text("Word not found!"));
-    }
-
-    List<MediaFile> mediaFiles = word?.mediaFiles ?? [];
-
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            // English Section
-            _buildLanguageSection(
-              title: 'English',
-              name: widget.word!.nameEn ?? '',
-              description: widget.word!.despEn ?? '',
-              icon: Icons.language,
-            ),
-
-            // Thai Section (if available)
-            if (widget.word!.nameTh?.isNotEmpty == true ||
-                widget.word!.despTh?.isNotEmpty == true)
-              _buildLanguageSection(
-                title: 'Thai',
-                name: widget.word!.nameTh ?? '',
-                description: widget.word!.despTh ?? '',
-                icon: Icons.translate,
-              ),
-
-            // Chinese Section (if available)
-            if (widget.word!.nameCn?.isNotEmpty == true ||
-                widget.word!.despCn?.isNotEmpty == true)
-              _buildLanguageSection(
-                title: 'Chinese',
-                name: widget.word!.nameCn ?? '',
-                description: widget.word!.despCn ?? '',
-                icon: Icons.translate,
-              ),
-
-            // Media Section
-            if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
-          ],
-        ),
       ),
     );
   }

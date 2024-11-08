@@ -4,8 +4,7 @@ import '../models/subscription_plan_model.dart';
 import '../network/api.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/material.dart';
-import 'package:dic_app_flutter/screens/login_screen.dart';
+import '../services/stripe_service.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({Key? key}) : super(key: key);
@@ -18,8 +17,12 @@ class SubscriptionScreen extends ConsumerWidget {
     final int currentUserSubscriptionPlanId =
         authState.user?.subscriptionPlanId ?? 0;
 
+    print('currentUserSubscriptionPlanId: ${currentUserSubscriptionPlanId}');
+
     Future<void> _handleSubscription(
         SubscriptionPlan plan, AuthState authState) async {
+      print('_handleSubscription User ID: ${authState.user?.userId}');
+
       if (plan.id == currentUserSubscriptionPlanId) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -30,34 +33,120 @@ class SubscriptionScreen extends ConsumerWidget {
         return;
       }
 
-      // Show coming soon dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Row(
-              children: [
-                Icon(Icons.access_time, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('Coming Soon!'),
-              ],
-            ),
-            content: const Text(
-              'Online payment will be available soon. Please stay tuned!',
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
+      try {
+        // Check user ID
+        if (authState.user?.userId == null) {
+          throw Exception('User ID is null');
+        }
+
+        // Check if the plan is free
+        if (plan.price <= 0) {
+          // Directly update the backend for free plan subscription
+          final api = API();
+          final subscriptionData = await api.createUserSubscription(
+            authState.user!.userId,
+            plan.id,
+            '', // No payment ID needed for free plans
           );
-        },
-      );
+
+          print('subscriptionData: $subscriptionData');
+
+          // Update the user state with the new subscription data
+          await ref
+              .read(authProvider.notifier)
+              .updateUserSubscription(subscriptionData);
+
+          // Refresh the subscription plans
+          ref.refresh(subscriptionPlansProvider);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Free subscription activated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          return; // Exit the method after handling free plan
+        }
+
+        // Step 1: Create a payment intent for paid plans
+        final paymentIntentData = await StripeService.createPaymentIntent(
+          authState.user!.userId,
+          plan.id,
+        );
+
+        // Validate payment intent data
+        final clientSecret = paymentIntentData['clientSecret'];
+        final paymentIntentId = paymentIntentData['paymentIntentId'];
+
+        print('clientSecret: $clientSecret');
+        print('paymentIntentId: $paymentIntentId');
+
+        if (clientSecret == null || paymentIntentId == null) {
+          throw Exception(
+              'Payment intent data is incomplete: $paymentIntentData');
+        }
+
+        // Step 2: Confirm the payment
+        await StripeService.confirmPayment(clientSecret);
+
+        // Step 3: Handle successful subscription creation
+        final api = API();
+        final subscriptionData = await api.createUserSubscription(
+          authState.user!.userId,
+          plan.id,
+          paymentIntentId.toString(),
+        );
+
+        // Update the user state with the new subscription data
+        await ref
+            .read(authProvider.notifier)
+            .updateUserSubscription(subscriptionData);
+
+        // Refresh the subscription plans
+        ref.refresh(subscriptionPlansProvider);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Subscription activated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        // Handle payment failure
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Payment failed: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+
+      // Show coming soon dialog
+      // showDialog(
+      //   context: context,
+      //   builder: (BuildContext context) {
+      //     return AlertDialog(
+      //       shape: RoundedRectangleBorder(
+      //         borderRadius: BorderRadius.circular(16),
+      //       ),
+      //       title: const Row(
+      //         children: [
+      //           Icon(Icons.access_time, color: Colors.blue),
+      //           SizedBox(width: 8),
+      //           Text('Coming Soon!'),
+      //         ],
+      //       ),
+      //       content: const Text(
+      //         'Online payment will be available soon. Please stay tuned!',
+      //         style: TextStyle(fontSize: 16),
+      //       ),
+      //       actions: [
+      //         TextButton(
+      //           onPressed: () => Navigator.of(context).pop(),
+      //           child: const Text('OK'),
+      //         ),
+      //       ],
+      //     );
+      //   },
+      // );
     }
 
     Widget _buildSubscriptionCard(SubscriptionPlan plan, bool isCurrentPlan) {
