@@ -6,6 +6,7 @@ import 'package:dic_app_flutter/network/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:dic_app_flutter/components/media_view_dialog.dart';
+import 'package:country_icons/country_icons.dart';
 
 class WordDetail extends StatefulWidget {
   final Word? word;
@@ -44,7 +45,7 @@ class _WordDetailState extends State<WordDetail>
           // Prepare descriptions, filtering out null values
           descriptions = [
             {
-              'name': 'EN',
+              'name': 'US',
               'title': 'English',
               'description': word!.despEn ?? ''
             },
@@ -60,7 +61,7 @@ class _WordDetailState extends State<WordDetail>
               'description': word!.despFr ?? ''
             },
             {
-              'name': 'SP',
+              'name': 'ES',
               'title': 'Spanish',
               'description': word!.despSp ?? ''
             },
@@ -162,7 +163,25 @@ class _WordDetailState extends State<WordDetail>
               TabBar(
                 controller: _tabController,
                 tabs: descriptions.map((desc) {
-                  return Tab(text: desc['name']);
+                  // return Tab(text: desc['name']);
+                  return Tab(
+                    icon:
+                        // CountryIcons.getSvgFlag(
+                        //     desc['name'].toString().toUpperCase()),
+                        // CountryIcons.getSvgFlag('de'),
+                        Image.asset(
+                      'icons/flags/png100px/${desc['name'].toString().toLowerCase()}.png',
+                      package: 'country_icons',
+                      width: 24,
+                      height: 24,
+                    ),
+                    //   Image.asset(
+                    // 'assets/icons/${desc['name'].toString().toLowerCase()}.png', // Assuming you have flag icons in assets/icons/
+                    // package: 'country_icons',
+                    // width: 24,
+                    // height: 24,
+                    // ),
+                  );
                 }).toList(),
               ),
               // Swipeable Descriptions
@@ -178,32 +197,32 @@ class _WordDetailState extends State<WordDetail>
 
   Widget _buildMediaSection(List<MediaFile> mediaFiles) {
     return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 4, // Increased elevation for a more pronounced shadow
+      margin: const EdgeInsets.only(bottom: 16), // Increased bottom margin
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12), // Rounded corners
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: Colors.grey[200],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: Row(
               children: [
-                Icon(Icons.photo_library, color: Colors.blue[700], size: 14),
-                const SizedBox(width: 4),
+                Icon(Icons.photo_library, color: Colors.blue[700], size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Media Gallery',
                   style: TextStyle(
-                    fontSize: widget.textSize * 0.8,
-                    fontWeight: FontWeight.w500,
+                    fontSize: widget.textSize * 0.9,
+                    fontWeight: FontWeight.bold,
                     color: Colors.blue[700],
                   ),
                 ),
@@ -213,9 +232,9 @@ class _WordDetailState extends State<WordDetail>
           Padding(
             padding: const EdgeInsets.all(8),
             child: Container(
-              height: 150, // Set a fixed height for the horizontal scroll area
+              height: 120, // Set a smaller height for the media section
               child: ListView.builder(
-                scrollDirection: Axis.horizontal,
+                scrollDirection: Axis.horizontal, // Horizontal scrolling
                 itemCount: mediaFiles.length,
                 itemBuilder: (context, index) {
                   final mediaFile = mediaFiles[index];
@@ -231,20 +250,41 @@ class _WordDetailState extends State<WordDetail>
                         },
                       );
                     },
-                    child: Card(
-                      elevation: 1,
+                    child: Container(
+                      width: 100, // Set a fixed width for each media item
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 4), // Spacing between items
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          mediaFile.filePath,
-                          fit: BoxFit.cover,
-                          width: 100, // Set a fixed width for each media item
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.error),
-                            );
-                          },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Stack(
+                          children: [
+                            Image.network(
+                              mediaFile.filePath,
+                              fit: BoxFit.cover, // Cover the entire area
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.error),
+                                );
+                              },
+                            ),
+                            // Overlay effect to indicate clickability
+                            if (mediaFile.fileType ==
+                                'video') // Check if the media file is a video
+                              Positioned.fill(
+                                child: Container(
+                                  color: Colors.black.withOpacity(
+                                      0.3), // Semi-transparent overlay
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons
+                                        .play_arrow, // Play icon for video indication
+                                    color: Colors.white,
+                                    size: 30, // Slightly smaller play icon
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),

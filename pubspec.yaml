@@ -60,6 +60,8 @@ dependencies:
   package_info_plus: ^4.2.0
   # flutter_stripe: ^11.2.0
   flutter_stripe: ^10.1.0
+  country_icons: ^3.0.0
+  flutter_svg: ^2.0.0
   # stripe_android: ^11.2.1
 
 dev_dependencies:

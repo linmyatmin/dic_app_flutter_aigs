@@ -93,7 +93,7 @@ class _MediaViewDialogState extends State<MediaViewDialog> {
             right: 0,
             child: SafeArea(
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: Colors.black, size: 30),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -108,7 +108,7 @@ class _MediaViewDialogState extends State<MediaViewDialog> {
                 child: Text(
                   '${_currentIndex + 1}/${widget.mediaFiles.length}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
