@@ -21,9 +21,13 @@ class DetailScreen extends ConsumerWidget {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Theme.of(context).primaryColor,
-        title: Text(
-          word!.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
-          style: const TextStyle(color: Colors.white),
+        // title: Text(
+        //   word!.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
+        //   style: const TextStyle(color: Colors.white),
+        // ),
+        title: Html(
+          data: word?.nameEn,
+          style: {"p": Style(color: Colors.white)},
         ),
         actions: [
           IconButton(

@@ -45,7 +45,7 @@ class _WordDetailState extends State<WordDetail>
           // Prepare descriptions, filtering out null values
           descriptions = [
             {
-              'name': 'US',
+              'name': 'GB',
               'title': 'English',
               'description': word!.despEn ?? ''
             },

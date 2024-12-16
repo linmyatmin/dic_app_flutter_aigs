@@ -198,62 +198,25 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _filterWords() {
     final query = searchController.text.toLowerCase();
-    if (query.isNotEmpty) {
-      setState(() {
-        // First apply letter filter if any
-        if (selectedLetter.isEmpty || selectedLetter == 'all') {
-          filteredWords = words;
-        } else if (selectedLetter == 'numbers') {
-          filteredWords = words
-              .where((word) => RegExp(r'^[0-9]')
-                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-              .toList();
-        } else if (selectedLetter == 'symbols') {
-          filteredWords = words
-              .where((word) => RegExp(r'^[^a-zA-Z0-9]')
-                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-              .toList();
-        } else {
-          filteredWords = words
-              .where((word) => word.nameEn!
-                  .replaceAll(RegExp(r'<\/?p>'), '')
-                  .toLowerCase()
-                  .startsWith(selectedLetter))
-              .toList();
-        }
+    setState(() {
+      // Start with all words
+      filteredWords = words;
 
-        // Then apply search filter
+      // Apply letter filter if any
+      if (selectedLetter.isNotEmpty && selectedLetter != 'all') {
         filteredWords = filteredWords
-            .where((word) => word.nameEn!
-                .replaceAll(RegExp(r'<\/?p>'), '')
-                .toLowerCase()
-                .startsWith(query))
+            .where((word) =>
+                word.section?.toLowerCase() == selectedLetter.toLowerCase())
             .toList();
-      });
-    } else {
-      setState(() {
-        // Your existing filter logic for empty query
-        if (selectedLetter.isEmpty || selectedLetter == 'all') {
-          filteredWords = words;
-        } else if (selectedLetter == 'numbers') {
-          filteredWords = words
-              .where((word) => RegExp(r'^[0-9]')
-                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-              .toList(); // Show words starting with numbers
-        } else if (selectedLetter == 'symbols') {
-          filteredWords = words
-              .where((word) => RegExp(r'^[^a-zA-Z0-9]')
-                  .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-              .toList(); // Show words starting with symbols
-        } else {
-          filteredWords = words
-              .where((word) => word.nameEn!
-                  .replaceAll(RegExp(r'<\/?p>'), '')
-                  .startsWith(selectedLetter))
-              .toList(); // Show words starting with selected letter
-        }
-      });
-    }
+      }
+
+      // Apply search filter if there's a query
+      if (query.isNotEmpty) {
+        filteredWords = filteredWords
+            .where((word) => word.pureNameEn!.toLowerCase().startsWith(query))
+            .toList();
+      }
+    });
   }
 
   void _filterByLetter(String letter) {
@@ -261,22 +224,11 @@ class _HomePageState extends ConsumerState<HomePage> {
       selectedLetter = letter;
       if (letter == 'all') {
         filteredWords = words; // Show all words
-      } else if (letter == 'numbers') {
-        filteredWords = words
-            .where((word) => RegExp(r'^[0-9]')
-                .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-            .toList(); // Show words starting with numbers
-      } else if (letter == 'symbols') {
-        filteredWords = words
-            .where((word) => RegExp(r'^[^a-zA-Z0-9]')
-                .hasMatch(word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')))
-            .toList(); // Show words starting with symbols
       } else {
         filteredWords = words
-            .where((word) => word.nameEn!
-                .replaceAll(RegExp(r'<\/?p>'), '')
-                .startsWith(letter))
-            .toList(); // Show words starting with selected letter
+            .where(
+                (word) => word.section?.toLowerCase() == letter.toLowerCase())
+            .toList(); // Show words in the selected section
       }
     });
   }

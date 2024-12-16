@@ -12,6 +12,8 @@ class Word {
   final String? despFr; // Nullable
   final String? despSp; // Nullable
   final String? despJp; // Nullable
+  final String? section; // Nullable
+  final String? pureNameEn; // Nullable
   final List<MediaFile>? mediaFiles;
 
   Word({
@@ -25,6 +27,8 @@ class Word {
     this.despFr,
     this.despSp,
     this.despJp,
+    this.section,
+    this.pureNameEn,
     this.mediaFiles,
   });
 
@@ -56,6 +60,8 @@ class Word {
       despFr: json['despFr'],
       despSp: json['despSp'],
       despJp: json['despJp'],
+      section: json['section'],
+      pureNameEn: json['pureNameEn'],
       mediaFiles: json["mediaFiles"] != null
           ? List<MediaFile>.from(
               json["mediaFiles"].map((x) => MediaFile.fromJson(x)))
@@ -83,6 +89,8 @@ class Word {
         // 'desp_fr': despFr,
         // 'desp_sp': despSp,
         // 'desp_jp': despJp,
+        'section': section,
+        'pureNameEn': pureNameEn,
         "mediaFiles": mediaFiles != null
             ? List<dynamic>.from(mediaFiles!.map((x) => x.toJson()))
             : null,
