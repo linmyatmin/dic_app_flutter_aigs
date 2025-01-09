@@ -140,6 +140,158 @@ class _WordDetailState extends State<WordDetail>
     );
   }
 
+  void _navigateToWordDetail(BuildContext context, int wordId) async {
+    try {
+      List<Word> wordDetails = await API().getWordDetailById(wordId);
+      if (wordDetails.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(
+                title: Html(
+                  data: wordDetails.first.nameEn ?? '',
+                  style: {
+                    "body": Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                      fontSize: FontSize(20),
+                      color: Colors.white,
+                    ),
+                  },
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+                iconTheme: const IconThemeData(color: Colors.white),
+              ),
+              body: WordDetail(
+                word: wordDetails.first,
+                textSize: widget.textSize,
+              ),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error navigating to word detail: $e');
+    }
+  }
+
+  Widget _buildReferencesSection() {
+    if (word?.wordReferences == null || word!.wordReferences!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Initial number of references to show
+    const int initialDisplayCount = 2;
+
+    // State variable to track if all references are shown
+    final ValueNotifier<bool> showAll = ValueNotifier<bool>(false);
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: showAll,
+      builder: (context, isExpanded, child) {
+        final displayedRefs = isExpanded
+            ? word!.wordReferences!
+            : word!.wordReferences!.take(initialDisplayCount).toList();
+
+        return Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Card(
+            elevation: 4,
+            margin: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with pull handle
+                GestureDetector(
+                  onTap: () {
+                    showAll.value = !showAll.value;
+                  },
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.link, color: Colors.blue[700], size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'References (${word!.wordReferences!.length})',
+                              style: TextStyle(
+                                fontSize: widget.textSize * 0.9,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  constraints: BoxConstraints(
+                    maxHeight: isExpanded ? 200 : 80,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(12),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: displayedRefs.map((ref) {
+                        return InkWell(
+                          onTap: () => _navigateToWordDetail(context, ref.id),
+                          child: Html(
+                            data: ref.name,
+                            style: {
+                              "p": Style(
+                                margin: Margins.zero,
+                                padding: HtmlPaddings.zero,
+                                fontSize: FontSize(widget.textSize * 0.9),
+                                color: Colors.blue[700],
+                                textDecoration: TextDecoration.underline,
+                              ),
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -151,45 +303,39 @@ class _WordDetailState extends State<WordDetail>
     }
 
     List<MediaFile> mediaFiles = word?.mediaFiles ?? [];
+    bool hasReferences =
+        word?.wordReferences != null && word!.wordReferences!.isNotEmpty;
 
     return DefaultTabController(
-      length: descriptions.length, // Number of valid tabs
+      length: descriptions.length,
       child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              // TabBar for language selection
-              TabBar(
-                controller: _tabController,
-                tabs: descriptions.map((desc) {
-                  // return Tab(text: desc['name']);
-                  return Tab(
-                    icon:
-                        // CountryIcons.getSvgFlag(
-                        //     desc['name'].toString().toUpperCase()),
-                        // CountryIcons.getSvgFlag('de'),
-                        Image.asset(
-                      'icons/flags/png100px/${desc['name'].toString().toLowerCase()}.png',
-                      package: 'country_icons',
-                      width: 24,
-                      height: 24,
-                    ),
-                    //   Image.asset(
-                    // 'assets/icons/${desc['name'].toString().toLowerCase()}.png', // Assuming you have flag icons in assets/icons/
-                    // package: 'country_icons',
-                    // width: 24,
-                    // height: 24,
-                    // ),
-                  );
-                }).toList(),
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    tabs: descriptions.map((desc) {
+                      return Tab(
+                        icon: Image.asset(
+                          'icons/flags/png100px/${desc['name'].toString().toLowerCase()}.png',
+                          package: 'country_icons',
+                          width: 24,
+                          height: 24,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  Expanded(child: _buildSwipeableDescriptions()),
+                  if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
+                  if (hasReferences) const SizedBox(height: 100),
+                ],
               ),
-              // Swipeable Descriptions
-              Expanded(child: _buildSwipeableDescriptions()),
-              // Media Section
-              if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
-            ],
-          ),
+            ),
+            if (hasReferences) _buildReferencesSection(),
+          ],
         ),
       ),
     );

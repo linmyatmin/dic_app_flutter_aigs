@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dic_app_flutter/models/media_file_model.dart';
+import 'package:dic_app_flutter/models/word_reference_model.dart';
 
 class Word {
   final int id;
@@ -15,22 +16,23 @@ class Word {
   final String? section; // Nullable
   final String? pureNameEn; // Nullable
   final List<MediaFile>? mediaFiles;
+  final List<WordReference>? wordReferences;
 
-  Word({
-    required this.id,
-    this.nameEn,
-    this.despEn,
-    this.nameCn,
-    this.despCn,
-    this.nameTh,
-    this.despTh,
-    this.despFr,
-    this.despSp,
-    this.despJp,
-    this.section,
-    this.pureNameEn,
-    this.mediaFiles,
-  });
+  Word(
+      {required this.id,
+      this.nameEn,
+      this.despEn,
+      this.nameCn,
+      this.despCn,
+      this.nameTh,
+      this.despTh,
+      this.despFr,
+      this.despSp,
+      this.despJp,
+      this.section,
+      this.pureNameEn,
+      this.mediaFiles,
+      this.wordReferences});
 
   factory Word.fromRawJson(String str) => Word.fromJson(json.decode(str));
 
@@ -66,6 +68,10 @@ class Word {
           ? List<MediaFile>.from(
               json["mediaFiles"].map((x) => MediaFile.fromJson(x)))
           : [],
+      wordReferences: json["references"] != null
+          ? List<WordReference>.from(
+              json["references"].map((x) => WordReference.fromJson(x)))
+          : [],
     );
   }
 
@@ -93,6 +99,9 @@ class Word {
         'pureNameEn': pureNameEn,
         "mediaFiles": mediaFiles != null
             ? List<dynamic>.from(mediaFiles!.map((x) => x.toJson()))
+            : null,
+        "references": wordReferences != null
+            ? List<dynamic>.from(wordReferences!.map((x) => x.toJson()))
             : null,
       };
 }

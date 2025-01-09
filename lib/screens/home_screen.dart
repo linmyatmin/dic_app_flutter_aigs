@@ -18,6 +18,8 @@ import 'package:dic_app_flutter/providers/recent_searches_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dic_app_flutter/services/word_cache_service.dart';
 
+enum SearchMode { contains, startsWith, exactMatch }
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -89,6 +91,15 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  SearchMode _currentSearchMode = SearchMode.contains;
+
+  void _changeSearchMode(SearchMode mode) {
+    setState(() {
+      _currentSearchMode = mode;
+      _filterWords(); // Re-filter with new mode
+    });
+  }
+
   List<Word> words = [];
   List<Word> filteredWords = [];
   TextEditingController searchController = TextEditingController();
@@ -202,18 +213,37 @@ class _HomePageState extends ConsumerState<HomePage> {
       // Start with all words
       filteredWords = words;
 
+      // Apply search filter if there's a query
+      if (query.isNotEmpty) {
+        filteredWords = filteredWords.where((word) {
+          // Add null check for pureNameEn
+          if (word.pureNameEn == null) {
+            // print('Warning: word has null pureNameEn: $word');
+            return false;
+          }
+
+          final wordText = word.pureNameEn!.toLowerCase();
+          // print('Filtering word: $wordText'); // Debug print
+
+          switch (_currentSearchMode) {
+            case SearchMode.contains:
+              return wordText.contains(query);
+            case SearchMode.startsWith:
+              return wordText.startsWith(query);
+            case SearchMode.exactMatch:
+              return wordText == query;
+            default:
+              return wordText.contains(query);
+          }
+        }).toList();
+      }
+
       // Apply letter filter if any
       if (selectedLetter.isNotEmpty && selectedLetter != 'all') {
         filteredWords = filteredWords
             .where((word) =>
-                word.section?.toLowerCase() == selectedLetter.toLowerCase())
-            .toList();
-      }
-
-      // Apply search filter if there's a query
-      if (query.isNotEmpty) {
-        filteredWords = filteredWords
-            .where((word) => word.pureNameEn!.toLowerCase().startsWith(query))
+                word.section != null &&
+                word.section!.toLowerCase() == selectedLetter.toLowerCase())
             .toList();
       }
     });
@@ -236,22 +266,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    // Initialize connectivity checking
     _initConnectivity();
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((results) {
-      // Handle the first result from the list
       if (results.isNotEmpty) {
         _updateConnectionStatus(results.first);
       }
     });
 
     loadWords();
+
+    // Make sure the listener is properly set up
     searchController.addListener(() {
       _filterWords();
-      setState(() {}); // Rebuild to show/hide clear icon
     });
+
     _scrollController.addListener(() {
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
@@ -386,16 +415,78 @@ class _HomePageState extends ConsumerState<HomePage> {
                     labelText: 'Search gem dictionary...',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: searchController.text.isNotEmpty
-                        ? IconButton(
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (searchController.text.isNotEmpty)
+                          IconButton(
                             icon: const Icon(Icons.clear),
                             onPressed: () {
                               searchController.clear();
                               _filterWords();
                             },
-                          )
-                        : null,
+                          ),
+                        PopupMenuButton<SearchMode>(
+                          icon: const Icon(Icons.tune),
+                          onSelected: _changeSearchMode,
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: SearchMode.contains,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check,
+                                    color: _currentSearchMode ==
+                                            SearchMode.contains
+                                        ? Colors.blue
+                                        : Colors.transparent,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('Contains'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: SearchMode.startsWith,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check,
+                                    color: _currentSearchMode ==
+                                            SearchMode.startsWith
+                                        ? Colors.blue
+                                        : Colors.transparent,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('Starts with'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: SearchMode.exactMatch,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check,
+                                    color: _currentSearchMode ==
+                                            SearchMode.exactMatch
+                                        ? Colors.blue
+                                        : Colors.transparent,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('Exact match'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                  onChanged: (value) {
+                    print('onChanged: $value');
+                    _filterWords(); // Add this to ensure immediate filtering
+                  },
                 ),
               ),
               // Display the filtered selection and total word count with background color
