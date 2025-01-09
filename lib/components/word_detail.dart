@@ -210,7 +210,7 @@ class _WordDetailState extends State<WordDetail>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header with pull handle
+                // Header with diamond icon
                 GestureDetector(
                   onTap: () {
                     showAll.value = !showAll.value;
@@ -218,42 +218,35 @@ class _WordDetailState extends State<WordDetail>
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                      ),
-                    ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Container(
-                          width: 40,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(2),
+                        Icon(Icons.link, color: Colors.blue[700], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'References (${word!.wordReferences!.length})',
+                          style: TextStyle(
+                            fontSize: widget.textSize * 0.9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[700],
                           ),
                         ),
-                        Row(
-                          children: [
-                            Icon(Icons.link, color: Colors.blue[700], size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'References (${word!.wordReferences!.length})',
-                              style: TextStyle(
-                                fontSize: widget.textSize * 0.9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue[700],
-                              ),
-                            ),
-                          ],
+                        const Spacer(),
+                        // Diamond icon that rotates based on expanded state
+                        Transform.rotate(
+                          angle: isExpanded
+                              ? 0
+                              : 3.14159 / 4, // 45 degrees when not expanded
+                          child: Icon(
+                            Icons.diamond_outlined,
+                            color: Colors.blue[700],
+                            size: 24,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
+                // References content
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   constraints: BoxConstraints(
