@@ -1,5 +1,6 @@
 import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/favorites_notifier.dart';
 import 'package:dic_app_flutter/providers/font_size_provider.dart'; // Import the font size provider
@@ -84,13 +85,31 @@ class FavoriteScreen extends ConsumerWidget {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      title: Text(
-                        word.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      title: Html(
+                        data: word
+                            .nameEn, // Assuming nameEn contains HTML content
+                        style: {
+                          // Customize any HTML tags' styles here, e.g., <sub> or <p>
+                          "p": Style(
+                            fontSize: FontSize(12.0),
+                            fontWeight: FontWeight.normal,
+                            textAlign: TextAlign.left,
+                            maxLines: 1, // Limit to one line
+                            // height: 1.2,
+                          ),
+                          "sub": Style(
+                            fontSize: FontSize(
+                                6.0), // Slightly smaller font for subscript
+                          ),
+                        },
                       ),
+                      // Text(
+                      //   word.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
+                      //   style: const TextStyle(
+                      //     fontSize: 16,
+                      //     fontWeight: FontWeight.w500,
+                      //   ),
+                      // ),
                       trailing: const Icon(
                         Icons.chevron_right,
                         color: Colors.grey,

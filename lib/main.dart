@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dic_app_flutter/providers/recent_searches_provider.dart';
 import 'services/stripe_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // Providers
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -18,6 +20,9 @@ final recentSearchesProvider =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   try {
     final prefs = await SharedPreferences.getInstance();

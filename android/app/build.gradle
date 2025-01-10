@@ -1,5 +1,8 @@
 plugins {
    id "com.android.application"
+    // START: FlutterFire Configuration
+    id 'com.google.gms.google-services'
+    // END: FlutterFire Configuration
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -75,8 +78,8 @@ android {
             // signingConfig signingConfigs.release
           // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
-   
+            // signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
@@ -89,4 +92,10 @@ flutter {
 dependencies {
     // implementation 'com.stripe:stripe-android:20.44.2'
     // implementation 'com.stripe:stripe-android:21.0.0'
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.android.gms:play-services-auth:20.5.0'
 }
+
+// Add this at the bottom
+// apply plugin: 'com.google.gms.google-services'

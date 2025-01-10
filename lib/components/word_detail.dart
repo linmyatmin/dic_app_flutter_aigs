@@ -7,8 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:dic_app_flutter/components/media_view_dialog.dart';
 import 'package:country_icons/country_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dic_app_flutter/providers/language_settings_provider.dart'; // Import language settings provider
 
-class WordDetail extends StatefulWidget {
+class WordDetail extends ConsumerStatefulWidget {
   final Word? word;
   final double textSize;
 
@@ -16,10 +19,10 @@ class WordDetail extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<WordDetail> createState() => _WordDetailState();
+  ConsumerState<WordDetail> createState() => _WordDetailState();
 }
 
-class _WordDetailState extends State<WordDetail>
+class _WordDetailState extends ConsumerState<WordDetail>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool isLoading = true;
@@ -42,7 +45,11 @@ class _WordDetailState extends State<WordDetail>
           word = wordDetails.first;
           isLoading = false;
 
-          // Prepare descriptions, filtering out null values
+          // Get enabled languages from provider
+          final enabledLanguages =
+              ref.read(languageSettingsProvider).enabledLanguages;
+
+          // Filter descriptions based on enabled languages
           descriptions = [
             {
               'name': 'GB',
@@ -71,10 +78,11 @@ class _WordDetailState extends State<WordDetail>
               'description': word!.despJp ?? ''
             },
           ]
-              .where((desc) => desc['description']!.isNotEmpty)
-              .toList(); // Filter out null descriptions
+              .where((desc) =>
+                  desc['description']!.isNotEmpty &&
+                  enabledLanguages[desc['name']]!)
+              .toList();
 
-          // Initialize TabController with the number of valid descriptions
           _tabController =
               TabController(length: descriptions.length, vsync: this);
         });

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:dic_app_flutter/models/member.dart';
+import 'package:dic_app_flutter/models/auth_response.dart';
 import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
@@ -117,32 +117,32 @@ class AuthAPI {
     // This should return the same format as the regular login
     return {};
   }
+
+  Future<Map<String, dynamic>> authenticateWithGoogle({
+    required String email,
+    required String name,
+    required String firebaseToken,
+  }) async {
+    try {
+      print("Sending Google auth request to backend...");
+      print("Email: $email");
+      print("Name: $name");
+      print("Token length: ${firebaseToken.length}");
+
+      final response = await _dio.post(
+        '$_baseUrlProduction/api/Auth/GoogleSignIn',
+        data: {
+          'email': email,
+          'name': name,
+          'firebaseToken': firebaseToken,
+        },
+      );
+
+      print("Backend response: ${response.data}");
+      return response.data; // Return the same format as login
+    } catch (e) {
+      print('Error in authenticateWithGoogle: $e');
+      throw Exception('Failed to authenticate with backend: $e');
+    }
+  }
 }
-
-
-// fetch('https://dummyjson.com/auth/login', {
-//   method: 'POST',
-//   headers: { 'Content-Type': 'application/json' },
-//   body: JSON.stringify({
-    
-//     username: 'kminchelle',
-//     password: '0lelplR',
-//     // expiresInMins: 60, // optional
-//   })
-// })
-// .then(res => res.json())
-// .then(console.log);
-
-
-
-
-// {
-//   "id": 15,
-//   "username": "kminchelle",
-//   "email": "kminchelle@qq.com",
-//   "firstName": "Jeanne",
-//   "lastName": "Halvorson",
-//   "gender": "female",
-//   "image": "https://robohash.org/Jeanne.png?set=set4",
-//   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsInVzZXJuYW1lIjoia21pbmNoZWxsZSIsImVtYWlsIjoia21pbmNoZWxsZUBxcS5jb20iLCJmaXJzdE5hbWUiOiJKZWFubmUiLCJsYXN0TmFtZSI6IkhhbHZvcnNvbiIsImdlbmRlciI6ImZlbWFsZSIsImltYWdlIjoiaHR0cHM6Ly9yb2JvaGFzaC5vcmcvYXV0cXVpYXV0LnBuZz9zaXplPTUweDUwJnNldD1zZXQxIiwiaWF0IjoxNjM1NzczOTYyLCJleHAiOjE2MzU3Nzc1NjJ9.n9PQX8w8ocKo0dMCw3g8bKhjB8Wo7f7IONFBDqfxKhs"
-// }

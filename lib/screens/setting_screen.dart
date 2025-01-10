@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import '../services/word_cache_service.dart';
 import '../network/api.dart';
 import 'package:connectivity_plus/connectivity_plus.dart'; // Add this import
+import 'package:dic_app_flutter/providers/language_settings_provider.dart'; // Import language settings provider
+import 'package:dic_app_flutter/screens/login_screen.dart';
+import 'package:dic_app_flutter/providers/auth_provider.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -109,193 +112,267 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     final fontSize = ref.watch(fontSizeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Theme.of(context).primaryColor,
-        title: const Text(
-          'Settings',
-          style: TextStyle(color: Colors.white),
+        appBar: AppBar(
+          iconTheme: const IconThemeData(color: Colors.white),
+          backgroundColor: Theme.of(context).primaryColor,
+          title: const Text(
+            'Settings',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Data Synchronization',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        Icons.sync,
-                        color: isDarkMode
-                            ? Colors.white
-                            : Theme.of(context).primaryColor,
-                      ),
-                      title: const Text('Sync Dictionary Data'),
-                      subtitle: _lastSyncTime != null
-                          ? Text(
-                              'Last synced: ${DateFormat('MMM d, y HH:mm').format(_lastSyncTime!)}')
-                          : const Text('Never synced'),
-                      trailing: _isSyncing
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Icon(
-                              Icons.chevron_right,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Theme.of(context).primaryColor,
-                            ),
-                      onTap: _isSyncing ? null : _syncData,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Display Settings',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Dark mode switch
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          'Data Synchronization',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            Icons.sync,
+                            color: isDarkMode
+                                ? Colors.white
+                                : Theme.of(context).primaryColor,
+                          ),
+                          title: const Text('Sync Dictionary Data'),
+                          subtitle: _lastSyncTime != null
+                              ? Text(
+                                  'Last synced: ${DateFormat('MMM d, y HH:mm').format(_lastSyncTime!)}')
+                              : const Text('Never synced'),
+                          trailing: _isSyncing
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Icon(
+                                  Icons.chevron_right,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Theme.of(context).primaryColor,
+                                ),
+                          onTap: _isSyncing ? null : _syncData,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Display Settings',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Dark mode switch
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.dark_mode,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Dark Mode',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: isDarkMode,
+                              onChanged: (value) {
+                                ref
+                                    .read(themeProvider.notifier)
+                                    .toggleTheme(value);
+                              },
+                            ),
+                          ],
+                        ),
+                        const Divider(),
+                        // Font size section
                         Row(
                           children: [
                             Icon(
-                              Icons.dark_mode,
+                              Icons.format_size,
                               color: isDarkMode
                                   ? Colors.white
                                   : Theme.of(context).primaryColor,
                             ),
                             const SizedBox(width: 12),
                             const Text(
-                              'Dark Mode',
+                              'Font Size',
                               style: TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '(${fontSize.round()})',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
-                        Switch(
-                          value: isDarkMode,
-                          onChanged: (value) {
-                            ref.read(themeProvider.notifier).toggleTheme(value);
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Text('A', style: TextStyle(fontSize: 12)),
+                            Expanded(
+                              child: Slider(
+                                min: 10.0,
+                                max: 30.0,
+                                divisions: 20,
+                                value: fontSize,
+                                label: fontSize.round().toString(),
+                                onChanged: (newSize) {
+                                  ref
+                                      .read(fontSizeProvider.notifier)
+                                      .updateFontSize(newSize);
+                                },
+                              ),
+                            ),
+                            const Text('A', style: TextStyle(fontSize: 24)),
+                          ],
+                        ),
+                        // Preview text
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Preview Text',
+                                style: TextStyle(
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'This is how your text will look with the current font size.',
+                                style: TextStyle(fontSize: fontSize),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Language Settings',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final languageSettings =
+                                ref.watch(languageSettingsProvider);
+
+                            return Column(
+                              children: languageSettings
+                                  .enabledLanguages.entries
+                                  .map((entry) {
+                                final bool isEnglish = entry.key == 'GB';
+                                return ListTile(
+                                  dense: true,
+                                  leading: Image.asset(
+                                    'icons/flags/png100px/${entry.key.toLowerCase()}.png',
+                                    package: 'country_icons',
+                                    width: 24,
+                                    height: 24,
+                                  ),
+                                  title: Text(entry.key),
+                                  trailing: Switch(
+                                    value: entry.value,
+                                    onChanged: isEnglish
+                                        ? null
+                                        : (bool value) {
+                                            ref
+                                                .read(languageSettingsProvider
+                                                    .notifier)
+                                                .toggleLanguage(entry.key);
+                                          },
+                                  ),
+                                  enabled: !isEnglish,
+                                );
+                              }).toList(),
+                            );
                           },
                         ),
                       ],
                     ),
-                    const Divider(),
-                    // Font size section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.format_size,
-                          color: isDarkMode
-                              ? Colors.white
-                              : Theme.of(context).primaryColor,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Font Size',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '(${fontSize.round()})',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDarkMode
-                                ? Colors.white
-                                : Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Text('A', style: TextStyle(fontSize: 12)),
-                        Expanded(
-                          child: Slider(
-                            min: 10.0,
-                            max: 30.0,
-                            divisions: 20,
-                            value: fontSize,
-                            label: fontSize.round().toString(),
-                            onChanged: (newSize) {
-                              ref
-                                  .read(fontSizeProvider.notifier)
-                                  .updateFontSize(newSize);
-                            },
-                          ),
-                        ),
-                        const Text('A', style: TextStyle(fontSize: 24)),
-                      ],
-                    ),
-                    // Preview text
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).dividerColor,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Preview Text',
-                            style: TextStyle(
-                              fontSize: fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This is how your text will look with the current font size.',
-                            style: TextStyle(fontSize: fontSize),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sign Out'),
+                  onTap: () async {
+                    final authService = ref.read(authServiceProvider);
+                    await authService.signOut();
+                    if (context.mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

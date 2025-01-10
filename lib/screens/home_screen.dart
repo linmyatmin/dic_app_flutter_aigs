@@ -28,6 +28,19 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth status when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      if (isLoggedIn) {
+        ref.read(authProvider.notifier).checkStoredUser();
+      }
+    });
+  }
+
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
@@ -52,6 +65,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    print('HomeScreen - Auth State:');
+    print('isAuthenticated: ${authState.isAuthenticated}');
+    print('user: ${authState.user?.email}');
 
     if (authState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -67,7 +83,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
-          if (authState.user != null && _selectedIndex != 2)
+          if (authState.isAuthenticated &&
+              authState.user != null &&
+              _selectedIndex != 2)
             IconButton(
                 onPressed: () => _logout(context),
                 icon: const Icon(Icons.logout))

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "689664259695",
+    "project_id": "gempedia-c5134",
+    "storage_bucket": "gempedia-c5134.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689664259695:android:63f246a814177abb013f9a",
+        "android_client_info": {
+          "package_name": "com.aigs.gempedia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "689664259695-5himjm0aabf0rnsoouh7n3pve32uf8tu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aigs.gempedia",
+            "certificate_hash": "83ee40281414742354934f9a8718958e12a1e648"
+          }
+        },
+        {
+          "client_id": "689664259695-o0v3k62ahm75teforl3rtrken2h7pali.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANGmLS8yVOjkLOE0ZrBGCnLRnZH1rb5ZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "689664259695-o0v3k62ahm75teforl3rtrken2h7pali.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "689664259695-hu21lkklnqg0i8hkmplgnmsuptlbcqns.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.dicAppFlutter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

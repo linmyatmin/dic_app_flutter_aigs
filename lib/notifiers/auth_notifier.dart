@@ -7,6 +7,7 @@ import 'package:dic_app_flutter/services/secure_storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dic_app_flutter/services/auth_service.dart';
 
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
   return GoogleSignIn(scopes: ['email']);
@@ -24,37 +25,40 @@ class AuthState {
   final String? userName;
   final String? email;
 
-  AuthState(
-      {this.user,
-      this.isLoading = false,
-      this.error,
-      this.isAuthenticated = false,
-      this.userGoogle,
-      this.token,
-      this.userId,
-      this.userName,
-      this.email});
+  AuthState({
+    this.user,
+    this.isLoading = false,
+    this.error,
+    this.isAuthenticated = false,
+    this.userGoogle,
+    this.token,
+    this.userId,
+    this.userName,
+    this.email,
+  });
 
-  AuthState copyWith(
-      {UserModel? user,
-      bool? isLoading,
-      String? error,
-      bool? isAuthenticated,
-      GoogleSignInAccount? userGoogle,
-      String? token,
-      String? userId,
-      String? userName,
-      String? email}) {
+  AuthState copyWith({
+    UserModel? user,
+    bool? isLoading,
+    String? error,
+    bool? isAuthenticated,
+    GoogleSignInAccount? userGoogle,
+    String? token,
+    String? userId,
+    String? userName,
+    String? email,
+  }) {
     return AuthState(
-        user: user ?? this.user,
-        isLoading: isLoading ?? this.isLoading,
-        error: error ?? this.error,
-        isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-        userGoogle: userGoogle ?? this.userGoogle,
-        token: token ?? this.token,
-        userId: userId ?? this.userId,
-        userName: userName ?? this.userName,
-        email: email ?? this.email);
+      user: user ?? this.user,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      userGoogle: userGoogle ?? this.userGoogle,
+      token: token ?? this.token,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      email: email ?? this.email,
+    );
   }
 }
 
@@ -63,14 +67,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final GoogleSignIn _googleSignIn;
   final SecureStorageService _secureStorage;
 
-  // AuthNotifier(this.authAPI, this._googleSignIn, this._secureStorage)
-  //     : super(AuthState());
-
   AuthNotifier(this.authAPI, this._googleSignIn, this._secureStorage)
-      : super(AuthState()) {
-    // Check for stored user when initializing
-    checkStoredUser();
-  }
+      : super(AuthState(isAuthenticated: false));
 
   Future<void> checkStoredUser() async {
     try {
@@ -88,7 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       print('Error checking stored user: $e');
-      await logout();
+      await signOut();
     }
   }
 
@@ -204,7 +202,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _secureStorage.deleteUser();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear(); // Clear all stored preferences
-      state = AuthState(); // Reset to initial state
+      //  state = AuthState(); // Reset to initial state
+      state = AuthState(isAuthenticated: false); // Reset to initial state
     } catch (e) {
       print('Error during logout: $e');
       throw 'Failed to sign out';
@@ -220,18 +219,97 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signInWithGoogle() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await authAPI.signInWithGoogle();
-      final user = UserModel.fromJson(response);
-      await _secureStorage.saveUser(user);
-      state = state.copyWith(user: user, isLoading: false);
+      print('1. Starting Google Sign-In...');
+      final userCredential = await AuthService().signInWithGoogle();
+      print('2. Firebase Auth Result: ${userCredential?.user?.email}');
+
+      if (userCredential?.user != null) {
+        print('3. Getting Firebase token...');
+        final firebaseToken = await userCredential?.user?.getIdToken();
+        print('4. Token received, length: ${firebaseToken?.length}');
+
+        print('5. Calling backend authentication...');
+        final response = await authAPI.authenticateWithGoogle(
+          email: userCredential?.user?.email ?? '',
+          name: userCredential?.user?.displayName ?? '',
+          firebaseToken: firebaseToken ?? '',
+        );
+        print('6. Backend Response: $response');
+
+        if (response['success'] == false) {
+          print('7. Backend auth failed: ${response['message']}');
+          throw response['message'] ?? 'Google Sign-In failed';
+        }
+
+        final data = response['data'];
+        print('8. Backend data: $data');
+        if (data == null) {
+          throw 'Invalid response: missing data';
+        }
+
+        final user = UserModel(
+          token: data['token']?.toString() ?? '',
+          userId: data['userId']?.toString() ?? '',
+          userName: data['userName']?.toString() ?? '',
+          email: data['email']?.toString() ?? userCredential?.user?.email ?? '',
+          subscriptionPlanId:
+              int.tryParse(data['subscriptionPlanId']?.toString() ?? '0') ?? 0,
+          startDate: DateTime.tryParse(data['startDate']?.toString() ?? '') ??
+              DateTime.now(),
+          endDate: DateTime.tryParse(data['endDate']?.toString() ?? '') ??
+              DateTime.now(),
+          status: data['status']?.toString() ?? '',
+          subscriptionPrice:
+              double.tryParse(data['subscriptionPrice']?.toString() ?? '0.0') ??
+                  0.0,
+          isTrial: data['isTrial'] == true,
+          trialEndDate:
+              DateTime.tryParse(data['trialEndDate']?.toString() ?? '') ??
+                  DateTime.now(),
+          active: data['active'] == true,
+        );
+
+        // Save only sensitive data to secure storage
+        await _secureStorage.saveUser(user);
+
+        state = state.copyWith(
+          isAuthenticated: true,
+          user: user,
+          isLoading: false,
+        );
+
+        print('Updated state user: ${state.user}');
+      }
     } catch (e) {
-      state = state.copyWith(error: e.toString(), isLoading: false);
+      print('Error in signInWithGoogle: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Authentication failed: $e',
+        isAuthenticated: false,
+      );
     }
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    state = state.copyWith(userGoogle: null, isAuthenticated: false);
+    try {
+      final authService = AuthService();
+      await authService.signOut();
+
+      // Clear secure storage
+      await _secureStorage.deleteUser();
+
+      // Clear SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      state = AuthState(isAuthenticated: false);
+    } catch (e) {
+      print('Error signing out: $e');
+      state = state.copyWith(
+        error: 'Sign out failed: $e',
+        isAuthenticated: false,
+      );
+    }
   }
 
   Future<void> register(String username, String email, String password) async {

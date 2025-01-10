@@ -4,6 +4,8 @@ import 'package:dic_app_flutter/models/word_list_model.dart';
 import 'package:dic_app_flutter/models/word_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dic_app_flutter/services/secure_storage_service.dart';
 
 class API {
   final Dio _dio = Dio();
@@ -59,6 +61,18 @@ class API {
   //     throw Exception('Failed to search products!');
   //   }
   // }
+
+  API() {
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final user = await SecureStorageService().getUser();
+        if (user?.token != null) {
+          options.headers['Authorization'] = 'Bearer ${user!.token}';
+        }
+        return handler.next(options);
+      },
+    ));
+  }
 
   Future<List<Word>> getWords() async {
     final response = await http.get(Uri.parse("$_baseUrl2/words"));

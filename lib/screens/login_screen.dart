@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/register_screen.dart';
+import 'package:dic_app_flutter/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dic_app_flutter/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   LoginScreen({Key? key}) : super(key: key);
@@ -24,6 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // final TextEditingController passwordController = TextEditingController();
 
   bool _showPassword = false;
+  final AuthService _authService = AuthService();
 
   Future<void> _handleLogin(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
@@ -238,6 +242,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Or continue with',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                    onPressed: () async {
+                      try {
+                        // final authService = ref.read(authServiceProvider);
+                        // final userCredential =
+                        //     await authService.signInWithGoogle();
+
+                        // if (userCredential != null && context.mounted) {
+                        //   Navigator.pushReplacement(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //         builder: (context) => const HomeScreen()),
+                        //   );
+                        // }
+                        await ref
+                            .read(authProvider.notifier)
+                            .signInWithGoogle();
+
+                        if (context.mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const HomeScreen()),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text('Failed to sign in with Google: $e')),
+                          );
+                        }
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/google_logo.png',
+                          height: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Sign in with Google'),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -1,3 +1,4 @@
+import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/aboutus_screen.dart';
 import 'package:dic_app_flutter/screens/profile_screen.dart';
@@ -13,8 +14,12 @@ class DrawerNavigation extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    print('DrawerNavigation - Auth State:');
+    print('isAuthenticated: ${authState.isAuthenticated}');
+    print('user: ${authState.user?.email}');
+
     final member = authState.user;
-    final bool userLoggedIn = member != null;
+    final bool userLoggedIn = authState.isAuthenticated && member != null;
 
     return Drawer(
       child: ListView(
@@ -27,9 +32,10 @@ class DrawerNavigation extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool userLoggedIn, dynamic member) {
+  Widget _buildHeader(
+      BuildContext context, bool userLoggedIn, UserModel? user) {
     print('User logged in: $userLoggedIn');
-    print('Member data: $member');
+    print('Member data: $user');
 
     return DrawerHeader(
       decoration: BoxDecoration(
@@ -39,22 +45,23 @@ class DrawerNavigation extends ConsumerWidget {
           fit: BoxFit.cover,
         ),
       ),
-      child: userLoggedIn
+      child: userLoggedIn && user != null
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundImage: NetworkImage(
-                      member.image ?? 'https://via.placeholder.com/150'),
+                  backgroundImage: user.image?.isNotEmpty == true
+                      ? NetworkImage(user.image!)
+                      : NetworkImage('https://via.placeholder.com/150'),
                 ),
                 SizedBox(height: 10),
                 Text(
-                  member.userName,
+                  user.userName,
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 Text(
-                  member.email,
+                  user.email,
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
