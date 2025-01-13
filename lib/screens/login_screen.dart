@@ -279,12 +279,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             .read(authProvider.notifier)
                             .signInWithGoogle();
 
-                        if (context.mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const HomeScreen()),
-                          );
+                        final authState = ref.read(authProvider);
+
+                        if (authState.isAuthenticated &&
+                            authState.user != null) {
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const HomeScreen()),
+                            );
+                          }
                         }
                       } catch (e) {
                         if (context.mounted) {

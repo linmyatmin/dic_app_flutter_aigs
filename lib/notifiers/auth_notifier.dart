@@ -223,6 +223,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userCredential = await AuthService().signInWithGoogle();
       print('2. Firebase Auth Result: ${userCredential?.user?.email}');
 
+      if (userCredential == null) {
+        // User cancelled the sign-in
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
       if (userCredential?.user != null) {
         print('3. Getting Firebase token...');
         final firebaseToken = await userCredential?.user?.getIdToken();

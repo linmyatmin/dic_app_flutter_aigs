@@ -3,6 +3,7 @@ import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/aboutus_screen.dart';
 import 'package:dic_app_flutter/screens/profile_screen.dart';
 import 'package:dic_app_flutter/screens/register_screen.dart';
+import 'package:dic_app_flutter/screens/login_screen.dart';
 import 'package:dic_app_flutter/screens/setting_screen.dart';
 import 'package:dic_app_flutter/screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +88,7 @@ class DrawerNavigation extends ConsumerWidget {
         _buildListTile(
           icon: Icons.login,
           title: 'Sign In / Sign Up',
-          onTap: () => _navigateTo(context, RegisterScreen()),
+          onTap: () => _navigateTo(context, LoginScreen()),
         ),
       ],
       _buildListTile(
