@@ -19,12 +19,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController usernameController =
-      TextEditingController(text: 'lin@aigsthailand.com');
-  final TextEditingController passwordController =
-      TextEditingController(text: 'AdminPassword123!');
-  // final TextEditingController usernameController = TextEditingController();
-  // final TextEditingController passwordController = TextEditingController();
+  // final TextEditingController usernameController =
+  //     TextEditingController(text: 'lin@aigsthailand.com');
+  // final TextEditingController passwordController =
+  //     TextEditingController(text: 'AdminPassword123!');
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   bool _showPassword = false;
   final AuthService _authService = AuthService();

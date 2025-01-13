@@ -56,5 +56,10 @@
 				</array>
 			</dict>
 		</array>
+		<!-- Google Sign-in Section -->
+		<key>GIDClientID</key>
+		<!-- Replace with your CLIENT_ID from GoogleService-Info.plist -->
+		<string>689664259695-knkj277p8298hthnsorvnu50q89cpe3l.apps.googleusercontent.com</string>
+		<!-- End of Google Sign-in Section -->
 	</dict>
 </plist>
