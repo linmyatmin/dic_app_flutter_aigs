@@ -1,15 +1,45 @@
+import 'package:dic_app_flutter/models/subscription.dart';
+import 'package:dic_app_flutter/models/subscription_plan_model.dart';
+import 'package:dic_app_flutter/services/secure_storage_service.dart';
 import 'package:dio/dio.dart';
-import '../models/subscription_plan_model.dart';
 
 class SubscriptionService {
-  final Dio _dio;
+  final Dio _dio = Dio();
+  final String baseUrl = "http://122.155.9.144/api";
+  final SecureStorageService _secureStorage = SecureStorageService();
 
-  SubscriptionService(this._dio);
+  // Add authorization token to requests
+  SubscriptionService() {
+    _dio.options.followRedirects = true;
+    _dio.options.validateStatus = (status) {
+      return status! < 500; // Accept all status codes less than 500
+    };
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final user = await _secureStorage.getUser();
+        final token = user?.token;
+        print('token: $token');
+
+        if (token == null) {
+          return handler.reject(
+            DioException(
+              requestOptions: options,
+              error: 'No authentication token found',
+            ),
+          );
+        }
+
+        options.headers['Authorization'] = 'Bearer $token';
+        return handler.next(options);
+      },
+    ));
+  }
 
   // Get all subscription plans
   Future<List<SubscriptionPlan>> getSubscriptionPlans() async {
     try {
-      final response = await _dio.get('/api/subscriptionplans');
+      final response = await _dio.get('$baseUrl/subscriptionplans');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -25,7 +55,8 @@ class SubscriptionService {
   // Get current user subscription
   Future<SubscriptionPlan?> getCurrentSubscription(String userId) async {
     try {
-      final response = await _dio.get('/api/UserSubscriptions/$userId/current');
+      final response =
+          await _dio.get('$baseUrl/UserSubscriptions/$userId/current');
 
       if (response.statusCode == 200) {
         // if (response.data['data'] != null) {
@@ -42,6 +73,30 @@ class SubscriptionService {
     }
   }
 
+  Future<ChangePlanResponse> changePlan(int planId, String userId) async {
+    try {
+      print('Attempting to change plan with ID: $planId'); // Debug print
+
+      final response = await _dio.post(
+        '$baseUrl/UserSubscriptions/change-plan',
+        data: {'planId': planId, 'userId': userId}, // Simplify the request data
+      );
+
+      print('API Response: ${response.data}'); // Debug print
+      print('Status Code: ${response.statusCode}'); // Debug print
+
+      return ChangePlanResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      print('Dio Error: ${e.message}'); // Debug print
+      print('Error Response: ${e.response?.data}'); // Debug print
+      if (e.response != null) {
+        final errorData = e.response?.data;
+        throw Exception(errorData['message'] ?? 'Failed to change plan');
+      }
+      throw Exception('Network error occurred');
+    }
+  }
+
   // Create new subscription
   Future<void> createUserSubscription({
     required String userId,
@@ -54,7 +109,7 @@ class SubscriptionService {
   }) async {
     try {
       final response = await _dio.post(
-        '/api/usersubscriptions',
+        '$baseUrl/usersubscriptions',
         data: {
           'userid': userId,
           'SubscriptionPlanId': planId,

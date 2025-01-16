@@ -20,4 +20,18 @@ class SecureStorageService {
   Future<void> deleteUser() async {
     await _storage.delete(key: 'user');
   }
+
+  Future<List<String>?> getFavorites() async {
+    final favoritesJson = await _storage.read(key: 'favorites');
+    if (favoritesJson == null) return null;
+    return List<String>.from(json.decode(favoritesJson));
+  }
+
+  Future<void> saveFavorites(List<String> favorites) async {
+    await _storage.write(key: 'favorites', value: json.encode(favorites));
+  }
+
+  Future<void> deleteFavorites() async {
+    await _storage.delete(key: 'favorites');
+  }
 }

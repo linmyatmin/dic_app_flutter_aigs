@@ -74,6 +74,18 @@ class AuthService {
     }
   }
 
+  // Register with email and password
+  Future<UserCredential?> registerWithEmail(
+      String email, String password) async {
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+    } catch (e) {
+      print('Error registering with email: $e');
+      return null;
+    }
+  }
+
   // Check if email is verified
   bool isEmailVerified(User user) {
     return user.emailVerified;

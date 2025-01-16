@@ -6,15 +6,14 @@ import '../models/subscription_plan_model.dart';
 
 // Provider for the subscription service
 final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
-  final dio = ref.watch(dioProvider);
-  return SubscriptionService(dio);
+  return SubscriptionService();
 });
 
 // Provider for subscription plans
 final subscriptionPlansProvider =
     FutureProvider<List<SubscriptionPlan>>((ref) async {
-  final service = ref.read(subscriptionServiceProvider);
-  return service.getSubscriptionPlans();
+  final subscriptionService = ref.read(subscriptionServiceProvider);
+  return subscriptionService.getSubscriptionPlans();
 });
 
 // Provider for current user subscription (if needed)

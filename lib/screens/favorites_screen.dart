@@ -1,15 +1,41 @@
+import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:dic_app_flutter/screens/detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/favorites_notifier.dart';
 import 'package:dic_app_flutter/providers/font_size_provider.dart'; // Import the font size provider
+import 'package:dic_app_flutter/screens/login_screen.dart';
 
 class FavoriteScreen extends ConsumerWidget {
   const FavoriteScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    // If not authenticated, show login prompt
+    if (!authState.isAuthenticated) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Please login to view your favorites'),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              child: Text('Login'),
+            ),
+          ],
+        ),
+      );
+    }
+
     final favorites = ref.watch(favoritesProvider);
 
     return Scaffold(
