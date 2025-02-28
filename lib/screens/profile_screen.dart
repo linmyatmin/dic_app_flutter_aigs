@@ -1,4 +1,5 @@
 import 'package:dic_app_flutter/network/auth_api.dart';
+import 'package:dic_app_flutter/notifiers/subscription_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
@@ -122,7 +123,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildInfoTile(context, 'Email', currentUser.email),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final userId =
+                    currentUser.userId; // Get userId from currentUser
+                await ref
+                    .read(subscriptionProvider.notifier)
+                    .refreshSubscription(userId);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SubscriptionScreen()),

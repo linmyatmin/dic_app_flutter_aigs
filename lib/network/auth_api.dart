@@ -145,4 +145,25 @@ class AuthAPI {
       throw Exception('Failed to authenticate with backend: $e');
     }
   }
+
+  Future<Map<String, dynamic>> googleSignIn({
+    required String token,
+    required String name,
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrlProduction/auth/google',
+        data: {
+          'token': token,
+          'name': name,
+          'email': email,
+        },
+      );
+
+      return response.data;
+    } catch (e) {
+      throw 'Google sign in failed: $e';
+    }
+  }
 }

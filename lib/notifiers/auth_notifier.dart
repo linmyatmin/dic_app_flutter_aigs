@@ -66,9 +66,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthAPI authAPI;
   final GoogleSignIn _googleSignIn;
   final SecureStorageService _secureStorage;
+  final AuthService _authService;
 
-  AuthNotifier(this.authAPI, this._googleSignIn, this._secureStorage)
-      : super(AuthState(isAuthenticated: false));
+  AuthNotifier(
+    this.authAPI,
+    this._googleSignIn,
+    this._secureStorage,
+    this._authService,
+  ) : super(AuthState(isAuthenticated: false));
+
+  void setLoading(bool isLoading) {
+    state = state.copyWith(isLoading: isLoading);
+  }
 
   Future<void> checkStoredUser() async {
     try {
@@ -216,86 +225,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(user: user, isLoading: false);
   }
 
-  Future<void> signInWithGoogle() async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      print('1. Starting Google Sign-In...');
-      final userCredential = await AuthService().signInWithGoogle();
-      print('2. Firebase Auth Result: ${userCredential?.user?.email}');
-
-      if (userCredential == null) {
-        // User cancelled the sign-in
-        state = state.copyWith(isLoading: false);
-        return;
-      }
-
-      if (userCredential?.user != null) {
-        print('3. Getting Firebase token...');
-        final firebaseToken = await userCredential?.user?.getIdToken();
-        print('4. Token received, length: ${firebaseToken?.length}');
-
-        print('5. Calling backend authentication...');
-        final response = await authAPI.authenticateWithGoogle(
-          email: userCredential?.user?.email ?? '',
-          name: userCredential?.user?.displayName ?? '',
-          firebaseToken: firebaseToken ?? '',
-        );
-        print('6. Backend Response: $response');
-
-        if (response['success'] == false) {
-          print('7. Backend auth failed: ${response['message']}');
-          throw response['message'] ?? 'Google Sign-In failed';
-        }
-
-        final data = response['data'];
-        print('8. Backend data: $data');
-        if (data == null) {
-          throw 'Invalid response: missing data';
-        }
-
-        final user = UserModel(
-          token: data['token']?.toString() ?? '',
-          userId: data['userId']?.toString() ?? '',
-          userName: data['userName']?.toString() ?? '',
-          email: data['email']?.toString() ?? userCredential?.user?.email ?? '',
-          subscriptionPlanId:
-              int.tryParse(data['subscriptionPlanId']?.toString() ?? '0') ?? 0,
-          startDate: DateTime.tryParse(data['startDate']?.toString() ?? '') ??
-              DateTime.now(),
-          endDate: DateTime.tryParse(data['endDate']?.toString() ?? '') ??
-              DateTime.now(),
-          status: data['status']?.toString() ?? '',
-          subscriptionPrice:
-              double.tryParse(data['subscriptionPrice']?.toString() ?? '0.0') ??
-                  0.0,
-          isTrial: data['isTrial'] == true,
-          trialEndDate:
-              DateTime.tryParse(data['trialEndDate']?.toString() ?? '') ??
-                  DateTime.now(),
-          active: data['active'] == true,
-        );
-
-        // Save only sensitive data to secure storage
-        await _secureStorage.saveUser(user);
-
-        state = state.copyWith(
-          isAuthenticated: true,
-          user: user,
-          isLoading: false,
-        );
-
-        print('Updated state user: ${state.user}');
-      }
-    } catch (e) {
-      print('Error in signInWithGoogle: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Authentication failed: $e',
-        isAuthenticated: false,
-      );
-    }
-  }
-
   Future<void> signOut() async {
     try {
       final authService = AuthService();
@@ -376,11 +305,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void updateUser(UserModel user) {
     state = state.copyWith(user: user);
   }
+
+  Future<void> storeAndUpdateUser(UserModel user) async {
+    try {
+      // Store user in secure storage
+      await _secureStorage.saveUser(user);
+
+      // Store basic info in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', user.token ?? '');
+      await prefs.setString('userId', user.userId ?? '');
+      await prefs.setString('userName', user.userName ?? '');
+      await prefs.setString('email', user.email ?? '');
+      await prefs.setBool('isLoggedIn', true);
+
+      // Update the state
+      state = state.copyWith(
+        isAuthenticated: true,
+        token: user.token,
+        userId: user.userId,
+        user: user,
+        isLoading: false,
+      );
+
+      print('Updated auth state with user: ${state.user}');
+    } catch (e) {
+      print('Error storing user data: $e');
+      throw 'Failed to store user data';
+    }
+  }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authAPI = AuthAPI();
   final googleSignIn = ref.watch(googleSignInProvider);
   final secureStorage = SecureStorageService();
-  return AuthNotifier(authAPI, googleSignIn, secureStorage);
+  final authService = AuthService();
+  return AuthNotifier(authAPI, googleSignIn, secureStorage, authService);
 });

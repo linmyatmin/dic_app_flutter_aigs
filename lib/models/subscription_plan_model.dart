@@ -3,33 +3,26 @@ import 'dart:ffi';
 
 class SubscriptionPlan {
   final int id;
-  final String name;
+  final String? name;
   final String? description;
   final double price;
   final int duration;
-  final int durationUnit;
-  final String? features;
+  final dynamic durationUnit;
   final bool active;
-  final DateTime createDate;
-  final String? createBy;
-  final DateTime updateDate;
-  final String? updateBy;
   final String? stripePriceId;
+  final String? stripeProductId;
 
-  SubscriptionPlan(
-      {required this.id,
-      required this.name,
-      this.description,
-      required this.price,
-      required this.duration,
-      required this.durationUnit,
-      this.features,
-      required this.active,
-      required this.createDate,
-      this.createBy,
-      required this.updateDate,
-      this.updateBy,
-      this.stripePriceId});
+  SubscriptionPlan({
+    required this.id,
+    this.name,
+    this.description,
+    required this.price,
+    required this.duration,
+    required this.durationUnit,
+    required this.active,
+    this.stripePriceId,
+    this.stripeProductId,
+  });
 
   factory SubscriptionPlan.fromRawJson(String str) =>
       SubscriptionPlan.fromJson(json.decode(str));
@@ -38,19 +31,15 @@ class SubscriptionPlan {
 
   factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
     return SubscriptionPlan(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      price: (json['price'] as num).toDouble(),
-      duration: json['duration'] as int,
-      durationUnit: json['durationUnit'] as int,
-      features: json['features'] as String?,
-      active: json['active'] as bool,
-      createDate: DateTime.parse(json['createDate'] as String),
-      createBy: json['createBy'] as String?,
-      updateDate: DateTime.parse(json['updateDate'] as String),
-      updateBy: json['updateBy'] as String?,
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      price: json['price']?.toDouble() ?? 0.0,
+      duration: json['duration'],
+      durationUnit: json['durationUnit'],
+      active: json['active'] ?? false,
       stripePriceId: json['stripePriceId'],
+      stripeProductId: json['stripeProductId'],
     );
   }
 
@@ -61,12 +50,8 @@ class SubscriptionPlan {
         'price': price,
         'duration': duration,
         'durationUnit': durationUnit,
-        'features': features,
         'active': active,
-        'createDate': createDate.toIso8601String(),
-        'createBy': createBy,
-        'updateDate': updateDate.toIso8601String(),
-        'updateBy': updateBy,
         'stripePriceId': stripePriceId,
+        'stripeProductId': stripeProductId,
       };
 }

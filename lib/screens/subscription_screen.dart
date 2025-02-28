@@ -2,21 +2,37 @@ import 'package:dic_app_flutter/notifiers/subscription_notifier.dart';
 import 'package:dic_app_flutter/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import '../models/subscription_plan_model.dart';
-import '../network/api.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/stripe_service.dart';
 
-class SubscriptionScreen extends ConsumerWidget {
-  const SubscriptionScreen({Key? key}) : super(key: key);
+class SubscriptionScreen extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch current subscription when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = ref.read(authProvider).user?.userId ?? '';
+      ref.read(subscriptionProvider.notifier).getCurrentSubscription();
+    });
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
     final authState = ref.watch(authProvider);
     final plans = ref.watch(subscriptionPlansProvider);
+    final subscriptionState = ref.watch(subscriptionProvider);
+
+    // Use subscription state's plan ID if available, otherwise fall back to auth state
     final int currentUserSubscriptionPlanId =
-        authState.user?.subscriptionPlanId ?? 0;
+        subscriptionState.currentSubscription?.id ??
+            authState.user?.subscriptionPlanId ??
+            0;
 
     print('currentUserSubscriptionPlanId: ${currentUserSubscriptionPlanId}');
 
@@ -36,10 +52,18 @@ class SubscriptionScreen extends ConsumerWidget {
           await ref
               .read(subscriptionProvider.notifier)
               .createSubscription(plan);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Free subscription activated successfully!')),
-          );
+
+          // Add this: Refresh the subscription state
+          await ref
+              .read(subscriptionProvider.notifier)
+              .getCurrentSubscription();
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Free subscription activated successfully!')),
+            );
+          }
           return;
         }
 
@@ -48,26 +72,58 @@ class SubscriptionScreen extends ConsumerWidget {
             .read(subscriptionProvider.notifier)
             .changePlan(plan.id, authState.user!.userId);
 
-        if (response.requiresAction && response.checkoutSessionId != null) {
-          await StripeService.confirmPayment(response.checkoutSessionId!);
-          await ref
-              .read(subscriptionProvider.notifier)
-              .getCurrentSubscription();
-        }
+        // Add this: Refresh the subscription state
+        await ref.read(subscriptionProvider.notifier).getCurrentSubscription();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Subscription activated successfully!')),
-        );
+        // Show the API response message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.message)),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        print('Subscription error: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       }
     }
 
     Widget _buildSubscriptionCard(SubscriptionPlan plan, bool isCurrentPlan) {
       // Define colors
       final currentPlanColor = Colors.green.shade600;
+      final subscriptionState = ref.watch(subscriptionProvider);
+      final currentSubscription = subscriptionState.currentSubscription;
+      final authState = ref.watch(authProvider);
+
+      // Check if current subscription is paid (price > 0)
+      final bool hasActivePaidPlan =
+          currentSubscription != null && currentSubscription.price > 0;
+
+      // Format expiration date if available
+      String? expirationText;
+      if (isCurrentPlan && authState.user?.endDate != null) {
+        final endDate = authState.user!.endDate;
+        expirationText =
+            'Expires: ${endDate.toLocal().toString().split(' ')[0]}';
+      }
+
+      // Determine button state and label
+      String buttonLabel;
+      bool isButtonEnabled;
+      if (isCurrentPlan) {
+        buttonLabel = 'Current Plan';
+        isButtonEnabled = false;
+      } else if (hasActivePaidPlan) {
+        // Disable all plan buttons (both paid and free) when there's an active paid plan
+        buttonLabel = 'Changes after current plan ends';
+        isButtonEnabled = false;
+      } else {
+        buttonLabel = 'Subscribe';
+        isButtonEnabled = true;
+      }
 
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -98,23 +154,38 @@ class SubscriptionScreen extends ConsumerWidget {
                     topRight: Radius.circular(14),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                      size: 18,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Current Plan',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Current Plan',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    if (expirationText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          expirationText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -170,13 +241,14 @@ class SubscriptionScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: isCurrentPlan
-                          ? null
-                          : () => _handleSubscription(
-                              plan, ref.watch(authProvider)),
+                      onPressed: isButtonEnabled
+                          ? () =>
+                              _handleSubscription(plan, ref.watch(authProvider))
+                          : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isCurrentPlan ? Colors.grey.shade400 : primaryColor,
+                        backgroundColor: isButtonEnabled
+                            ? primaryColor
+                            : Colors.grey.shade400,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -187,11 +259,13 @@ class SubscriptionScreen extends ConsumerWidget {
                         children: [
                           if (isCurrentPlan)
                             const Icon(Icons.check, size: 20)
+                          else if (!isButtonEnabled && hasActivePaidPlan)
+                            const Icon(Icons.lock_clock, size: 20)
                           else
                             const Icon(Icons.shopping_cart_outlined, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            isCurrentPlan ? 'Current Plan' : 'Subscribe',
+                            buttonLabel,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -201,6 +275,19 @@ class SubscriptionScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  if (hasActivePaidPlan && !isCurrentPlan && plan.price > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Current paid plan must expire before switching to another paid plan',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 ],
               ),
             ),

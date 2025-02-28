@@ -58,14 +58,18 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
       final response = await _subscriptionService.changePlan(planId, userId);
 
       if (response.success) {
-        // If no payment required, refresh subscription
-        if (!response.requiresAction) {
-          await getCurrentSubscription();
-        }
+        // await getCurrentSubscription();
+        final newSubscription =
+            await _subscriptionService.getCurrentSubscription(userId);
+        state = state.copyWith(
+          isLoading: false,
+          currentSubscription: newSubscription,
+          error: null,
+        );
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: response.message,
+          error: 'Failed to change plan',
         );
       }
 
@@ -75,7 +79,30 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
         isLoading: false,
         error: e.toString(),
       );
-      rethrow;
+      return ChangePlanResponse(
+          success: false, message: e.toString(), requiresAction: false);
+    }
+  }
+
+  Future<void> refreshSubscription(String userId) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final subscription =
+          await _subscriptionService.getCurrentSubscription(userId);
+
+      print(
+          'SubscriptionNotifier refreshSubscription subscription: ${subscription?.id}');
+
+      state = state.copyWith(
+        isLoading: false,
+        currentSubscription: subscription,
+        error: null,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 }

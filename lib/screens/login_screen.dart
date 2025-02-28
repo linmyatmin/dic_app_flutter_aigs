@@ -1,4 +1,5 @@
 //new 23-07-2024
+import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:dic_app_flutter/screens/home_screen.dart';
 import 'package:dic_app_flutter/utils/validator.dart';
@@ -9,6 +10,7 @@ import 'package:dic_app_flutter/screens/register_screen.dart';
 import 'package:dic_app_flutter/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dic_app_flutter/providers/auth_provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   LoginScreen({Key? key}) : super(key: key);
@@ -28,6 +30,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _showPassword = false;
   final AuthService _authService = AuthService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final AuthAPI _authAPI = AuthAPI();
 
   Future<void> _handleLogin(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
@@ -264,31 +268,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     onPressed: () async {
                       try {
-                        // final authService = ref.read(authServiceProvider);
-                        // final userCredential =
-                        //     await authService.signInWithGoogle();
+                        ref.read(authProvider.notifier).setLoading(true);
 
-                        // if (userCredential != null && context.mounted) {
-                        //   Navigator.pushReplacement(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => const HomeScreen()),
-                        //   );
-                        // }
-                        await ref
-                            .read(authProvider.notifier)
-                            .signInWithGoogle();
+                        // Call Google Sign In
+                        final userCredential =
+                            await _authService.signInWithGoogle();
 
-                        final authState = ref.read(authProvider);
+                        print('User Credential: $userCredential');
 
-                        if (authState.isAuthenticated &&
-                            authState.user != null) {
-                          if (context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const HomeScreen()),
-                            );
+                        if (userCredential != null) {
+                          // Get the Firebase user
+                          final firebaseUser = userCredential.user;
+                          if (firebaseUser == null)
+                            throw 'Firebase user is null';
+
+                          // Get user info directly from firebaseUser
+                          final displayName = firebaseUser.displayName ?? '';
+                          final email = firebaseUser.email ?? '';
+                          final idToken = await firebaseUser.getIdToken();
+
+                          // Call your backend API to register/login the user
+                          final response =
+                              await _authAPI.authenticateWithGoogle(
+                            firebaseToken: idToken ?? '',
+                            name: displayName,
+                            email: email,
+                          );
+
+                          if (response['success'] == true) {
+                            // Create UserModel from response data
+                            final userData =
+                                UserModel.fromJson(response['data']);
+
+                            // Store user in secure storage
+                            await ref
+                                .read(authProvider.notifier)
+                                .storeAndUpdateUser(userData);
+
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const HomeScreen()),
+                              );
+                            }
+                          } else {
+                            throw response['message'] ??
+                                'Failed to sign in with Google';
                           }
                         }
                       } catch (e) {
@@ -298,6 +324,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 content:
                                     Text('Failed to sign in with Google: $e')),
                           );
+                        }
+                      } finally {
+                        if (mounted) {
+                          ref.read(authProvider.notifier).setLoading(false);
                         }
                       }
                     },

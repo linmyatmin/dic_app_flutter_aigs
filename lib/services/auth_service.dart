@@ -1,12 +1,15 @@
+import 'package:dic_app_flutter/models/user_model.dart';
 import 'package:dic_app_flutter/network/auth_api.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final AuthAPI _authAPI = AuthAPI();
+  final Dio _dio = Dio();
 
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
@@ -23,18 +26,35 @@ class AuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+      if (googleUser == null) {
+        print('Google Sign In was aborted by user');
+        return null;
+      }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      print('Google Auth AccessToken: ${googleAuth.accessToken}');
+      print('Google Auth IdToken: ${googleAuth.idToken}');
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      return await _auth.signInWithCredential(credential);
+      print('Full Credential Details: $credential');
+
+      try {
+        final userCredential = await _auth.signInWithCredential(credential);
+        print(
+            'Successfully signed in with Google: ${userCredential.user?.email}');
+        return userCredential;
+      } catch (signInError) {
+        print('Firebase sign-in error: $signInError');
+        throw signInError;
+      }
     } catch (e) {
-      print('Error in signInWithGoogle: $e');
+      print('Detailed Google Sign In error: $e');
       await _auth.signOut();
       await _googleSignIn.signOut();
       return null;
@@ -90,6 +110,18 @@ class AuthService {
   bool isEmailVerified(User user) {
     return user.emailVerified;
   }
+}
+
+class AuthResult {
+  final bool success;
+  final UserModel? user;
+  final String? message;
+
+  AuthResult({
+    required this.success,
+    this.user,
+    this.message,
+  });
 }
 
 // class User {

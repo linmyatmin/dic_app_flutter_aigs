@@ -75,7 +75,7 @@ class DetailScreen extends ConsumerWidget {
           Container(
             color: const Color.fromARGB(255, 45, 66, 87),
             padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -1,4 +1,7 @@
-import 'dart:convert';
+import 'package:dic_app_flutter/models/user_model.dart';
+import 'package:dic_app_flutter/network/auth_api.dart';
+import 'package:dic_app_flutter/screens/home_screen.dart';
+import 'package:dic_app_flutter/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dic_app_flutter/notifiers/auth_notifier.dart';
@@ -19,6 +22,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final AuthService _authService = AuthService();
+  final AuthAPI _authAPI = AuthAPI();
 
   bool _showPassword = false;
   bool _showConfirmPassword = false;
@@ -181,6 +186,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: const Text(
                       "Already have an account? Login",
                       style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                    onPressed: () async {
+                      try {
+                        ref.read(authProvider.notifier).setLoading(true);
+
+                        // Call Google Sign In
+                        final userCredential =
+                            await _authService.signInWithGoogle();
+
+                        if (userCredential != null) {
+                          final firebaseUser = userCredential.user;
+                          if (firebaseUser == null)
+                            throw 'Firebase user is null';
+
+                          final displayName = firebaseUser.displayName ?? '';
+                          final email = firebaseUser.email ?? '';
+                          final idToken = await firebaseUser.getIdToken();
+
+                          // Call your backend API to register the user
+                          final response =
+                              await _authAPI.authenticateWithGoogle(
+                            firebaseToken: idToken ?? '',
+                            name: displayName,
+                            email: email,
+                          );
+
+                          if (response['success'] == true) {
+                            final userData =
+                                UserModel.fromJson(response['data']);
+                            await ref
+                                .read(authProvider.notifier)
+                                .storeAndUpdateUser(userData);
+
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const HomeScreen()),
+                              );
+                            }
+                          } else {
+                            throw response['message'] ??
+                                'Failed to sign up with Google';
+                          }
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text('Failed to sign up with Google: $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          ref.read(authProvider.notifier).setLoading(false);
+                        }
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/google_logo.png',
+                          height: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Sign up with Google'),
+                      ],
                     ),
                   ),
                   if (authState.error != null)

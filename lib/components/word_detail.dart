@@ -111,21 +111,21 @@ class _WordDetailState extends ConsumerState<WordDetail>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.blue[100], // Background color for the title
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  desc['title']!,
-                  style: TextStyle(
-                    fontSize: 14, // Slightly smaller font size
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black, // Title text color
-                  ),
-                ),
-              ),
+              // Container(
+              //   padding: const EdgeInsets.all(5),
+              //   decoration: BoxDecoration(
+              //     color: Colors.blue[100], // Background color for the title
+              //     borderRadius: BorderRadius.circular(5),
+              //   ),
+              //   child: Text(
+              //     desc['title']!,
+              //     style: TextStyle(
+              //       fontSize: 14, // Slightly smaller font size
+              //       fontWeight: FontWeight.bold,
+              //       color: Colors.black, // Title text color
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 8),
               Expanded(
                 child: SingleChildScrollView(

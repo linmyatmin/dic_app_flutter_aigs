@@ -1,6 +1,7 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../models/subscription_plan_model.dart';
 import '../network/api.dart';
+import 'package:flutter/foundation.dart';
 
 class IAPService {
   // Map your subscription plan IDs to store product IDs
@@ -88,6 +89,22 @@ class IAPService {
         return Duration(days: plan.duration * 365);
       default:
         return Duration.zero;
+    }
+  }
+
+  Future<bool> purchaseSubscription(String planId) async {
+    try {
+      // // Show Stripe payment UI first
+      // final paymentResult = await _stripe.showPaymentSheet(
+      //   planId: planId,
+      //   // other necessary parameters
+      // );
+
+      // return paymentResult.status == PaymentStatus.succeeded;
+      return true;
+    } catch (e) {
+      debugPrint('Payment failed: $e');
+      return false;
     }
   }
 }

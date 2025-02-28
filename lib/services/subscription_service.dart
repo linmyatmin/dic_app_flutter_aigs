@@ -1,12 +1,15 @@
 import 'package:dic_app_flutter/models/subscription.dart';
 import 'package:dic_app_flutter/models/subscription_plan_model.dart';
+import 'package:dic_app_flutter/services/stripe_service.dart';
 import 'package:dic_app_flutter/services/secure_storage_service.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class SubscriptionService {
   final Dio _dio = Dio();
   final String baseUrl = "http://122.155.9.144/api";
   final SecureStorageService _secureStorage = SecureStorageService();
+  final StripeService _stripeService = StripeService();
 
   // Add authorization token to requests
   SubscriptionService() {
@@ -75,25 +78,88 @@ class SubscriptionService {
 
   Future<ChangePlanResponse> changePlan(int planId, String userId) async {
     try {
-      print('Attempting to change plan with ID: $planId'); // Debug print
-
-      final response = await _dio.post(
-        '$baseUrl/UserSubscriptions/change-plan',
-        data: {'planId': planId, 'userId': userId}, // Simplify the request data
+      // First get the subscription plan to get Stripe IDs
+      final plans = await getSubscriptionPlans();
+      final selectedPlan = plans.firstWhere(
+        (plan) => plan.id == planId,
+        orElse: () => throw Exception('Plan not found'),
       );
 
-      print('API Response: ${response.data}'); // Debug print
-      print('Status Code: ${response.statusCode}'); // Debug print
+      // First get payment intent from your backend
+      final response = await _dio.post(
+        '$baseUrl/UserSubscriptions/create-payment-intent',
+        data: {
+          'planid': planId,
+          'userid': userId,
+        },
+      );
 
-      return ChangePlanResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('Dio Error: ${e.message}'); // Debug print
-      print('Error Response: ${e.response?.data}'); // Debug print
-      if (e.response != null) {
-        final errorData = e.response?.data;
-        throw Exception(errorData['message'] ?? 'Failed to change plan');
+      if (response.statusCode != 200) {
+        debugPrint('Failed to create payment intent: ${response.statusCode}');
+        throw Exception(
+            'Failed to create payment intent: ${response.statusCode}');
       }
-      throw Exception('Network error occurred');
+
+      final clientSecret = response.data['clientSecret'];
+      if (clientSecret == null) {
+        debugPrint('No client secret received from server');
+        throw Exception('No client secret received from server');
+      }
+
+      // Initialize payment sheet with the client secret
+      await _stripeService.initPaymentSheet(
+        clientSecret,
+        selectedPlan.name ?? 'Subscription',
+        selectedPlan.stripePriceId ?? '',
+      );
+
+      // Show the payment sheet and get payment result
+      final paymentResult =
+          await _stripeService.presentPaymentSheet(clientSecret);
+
+      if (paymentResult == null) {
+        debugPrint('Payment cancelled or failed');
+        throw Exception('Payment cancelled or failed');
+      }
+
+      // Only after successful payment, update the subscription
+      // final subscriptionResponse = await _dio.post(
+      //   '$baseUrl/UserSubscriptions/change-plan',
+      //   data: {
+      //     'planid': planId,
+      //     'userid': userId,
+      //     // 'paymentId': paymentResult['paymentId'],
+      //   },
+      // );
+      final subscriptionResponse = await _dio.post(
+        '$baseUrl/UserSubscriptions/confirm-subscription', // New endpoint
+        data: {
+          'planId': planId,
+          'userId': userId,
+          'paymentId': paymentResult['paymentId'],
+        },
+      );
+
+      print('subscriptionResponse: ${subscriptionResponse.data}');
+
+      if (subscriptionResponse.statusCode != 200) {
+        throw Exception(
+            'Failed to update subscription: ${subscriptionResponse.statusCode}');
+      }
+
+      return ChangePlanResponse.fromJson(subscriptionResponse.data);
+    } catch (e) {
+      debugPrint('Error changing plan: $e');
+      throw Exception('Failed to change subscription plan: $e');
+    }
+  }
+
+  // Add method to handle failed payments
+  Future<void> revertFailedSubscription() async {
+    try {
+      await _dio.post('/api/subscription/revert-failed-payment');
+    } catch (e) {
+      debugPrint('Error reverting failed subscription: $e');
     }
   }
 
