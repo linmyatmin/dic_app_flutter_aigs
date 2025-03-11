@@ -20,8 +20,11 @@ class DetailScreen extends ConsumerWidget {
     final isFavorite =
         authState.isAuthenticated && favorites.any((w) => w.id == word?.id);
     final fontSize = ref.watch(fontSizeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor:
+          isDark ? Theme.of(context).primaryColorLight : Colors.grey.shade300,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Theme.of(context).primaryColor,

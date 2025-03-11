@@ -64,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authState = ref.watch(authProvider);
     print('HomeScreen - Auth State:');
     print('isAuthenticated: ${authState.isAuthenticated}');
@@ -74,6 +75,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return Scaffold(
+      backgroundColor:
+          isDark ? Theme.of(context).primaryColorLight : Colors.white,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Theme.of(context).primaryColor,
@@ -511,8 +514,8 @@ class _HomePageState extends ConsumerState<HomePage> {
               Padding(
                 padding: const EdgeInsets.all(0.0),
                 child: Container(
-                  color: const Color.fromARGB(
-                      255, 45, 66, 87), // Apply background color
+                  color:
+                      Theme.of(context).primaryColor, // Apply background color
                   padding: const EdgeInsets.symmetric(
                       vertical: 8.0,
                       horizontal: 16.0), // Add padding inside the container

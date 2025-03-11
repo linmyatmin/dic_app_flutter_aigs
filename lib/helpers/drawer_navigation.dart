@@ -15,105 +15,196 @@ class DrawerNavigation extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    print('DrawerNavigation - Auth State:');
-    print('isAuthenticated: ${authState.isAuthenticated}');
-    print('user: ${authState.user?.email}');
-
     final member = authState.user;
     final bool userLoggedIn = authState.isAuthenticated && member != null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          _buildHeader(context, userLoggedIn, member),
-          ..._buildMenuItems(context, userLoggedIn),
-        ],
+      backgroundColor: isDark ? Theme.of(context).primaryColor : Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              color: Theme.of(context).primaryColor,
+              child: _buildHeader(context, userLoggedIn, member),
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  ..._buildMenuItems(context, userLoggedIn, isDark),
+                ],
+              ),
+            ),
+            _buildFooter(context, isDark),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHeader(
       BuildContext context, bool userLoggedIn, UserModel? user) {
-    print('User logged in: $userLoggedIn');
-    print('Member data: $user');
-
-    return DrawerHeader(
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        image: DecorationImage(
-          image: AssetImage('assets/images/drawer_header_bg.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      color: Theme.of(context).primaryColor,
       child: userLoggedIn && user != null
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage: user.image?.isNotEmpty == true
-                      ? NetworkImage(user.image!)
-                      : NetworkImage('https://via.placeholder.com/150'),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Colors.white.withOpacity(0.2), width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white24,
+                    child: Text(
+                      user.userName[0].toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 10),
-                Text(
-                  user.userName,
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
+                const SizedBox(height: 16),
                 Text(
                   user.email,
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user.email,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
                 ),
               ],
             )
-          : Center(
-              child: Text(
-                'Welcome to GEMPEDIA',
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.white24,
+                  child: Icon(
+                    Icons.person_outline,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Welcome Guest',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
     );
   }
 
-  List<Widget> _buildMenuItems(BuildContext context, bool userLoggedIn) {
+  List<Widget> _buildMenuItems(
+      BuildContext context, bool userLoggedIn, bool isDark) {
     return [
+      const SizedBox(height: 8),
       if (userLoggedIn) ...[
         _buildListTile(
-          icon: Icons.account_circle,
+          context: context,
+          icon: Icons.person_outline,
           title: 'Profile',
-          onTap: () => _navigateTo(context, ProfileScreen()),
+          onTap: () => _navigateTo(context, const ProfileScreen()),
+          isDark: isDark,
         ),
       ] else ...[
         _buildListTile(
+          context: context,
           icon: Icons.login,
-          title: 'Sign In / Sign Up',
+          title: 'Sign In',
           onTap: () => _navigateTo(context, LoginScreen()),
+          isDark: isDark,
         ),
       ],
       _buildListTile(
-        icon: Icons.settings,
+        context: context,
+        icon: Icons.settings_outlined,
         title: 'Settings',
-        onTap: () => _navigateTo(context, SettingScreen()),
+        onTap: () => _navigateTo(context, const SettingScreen()),
+        isDark: isDark,
       ),
-      Divider(),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Divider(),
+      ),
       _buildListTile(
-        icon: Icons.info,
+        context: context,
+        icon: Icons.info_outline,
         title: 'About Us',
-        onTap: () => _navigateTo(context, AboutUsScreen()),
+        onTap: () => _navigateTo(context, const AboutUsScreen()),
+        isDark: isDark,
       ),
     ];
   }
 
-  ListTile _buildListTile({
+  Widget _buildListTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      leading: Icon(
+        icon,
+        color: isDark ? Colors.white70 : Colors.black54,
+        size: 24,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+      ),
       onTap: onTap,
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Icon(
+            Icons.diamond_outlined,
+            size: 16,
+            color: isDark ? Colors.white38 : Colors.black38,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Version 1.0.0',
+            style: TextStyle(
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

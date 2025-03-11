@@ -10,6 +10,7 @@ import 'package:country_icons/country_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dic_app_flutter/providers/language_settings_provider.dart'; // Import language settings provider
+import 'package:dic_app_flutter/theme/app_theme.dart';
 
 class WordDetail extends ConsumerStatefulWidget {
   final Word? word;
@@ -28,11 +29,39 @@ class _WordDetailState extends ConsumerState<WordDetail>
   bool isLoading = true;
   Word? word;
   List<Map<String, String>> descriptions = [];
+  int currentTabIndex = 0;
+
+  // Add scroll controller
+  final ScrollController _scrollController = ScrollController();
+
+  // Add keys for sections
+  final GlobalKey _mediaKey = GlobalKey();
+  final GlobalKey _referencesKey = GlobalKey();
+
+  // Scroll to section helper method
+  void _scrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.0, // Align to top
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     loadWordDetail();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> loadWordDetail() async {
@@ -49,7 +78,7 @@ class _WordDetailState extends ConsumerState<WordDetail>
           final enabledLanguages =
               ref.read(languageSettingsProvider).enabledLanguages;
 
-          // Filter descriptions based on enabled languages
+          // Create descriptions for all enabled languages, even if empty
           descriptions = [
             {
               'name': 'GB',
@@ -78,13 +107,22 @@ class _WordDetailState extends ConsumerState<WordDetail>
               'description': word!.despJp ?? ''
             },
           ]
-              .where((desc) =>
-                  desc['description']!.isNotEmpty &&
-                  enabledLanguages[desc['name']]!)
-              .toList();
+              .where((desc) => enabledLanguages[desc['name']]!)
+              .toList(); // Only filter by enabled languages
 
-          _tabController =
-              TabController(length: descriptions.length, vsync: this);
+          _tabController = TabController(
+            length: descriptions.length,
+            vsync: this,
+          );
+
+          // Add listener for tab changes
+          _tabController.addListener(() {
+            if (!_tabController.indexIsChanging) {
+              setState(() {
+                currentTabIndex = _tabController.index;
+              });
+            }
+          });
         });
       } else {
         setState(() {
@@ -102,49 +140,467 @@ class _WordDetailState extends ConsumerState<WordDetail>
     }
   }
 
-  Widget _buildSwipeableDescriptions() {
-    return TabBarView(
-      controller: _tabController,
-      children: descriptions.map((desc) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+        ),
+      );
+    }
+
+    if (word == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              "Word not found!",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Language Selection and Info Bar - More Compact
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Container(
-              //   padding: const EdgeInsets.all(5),
-              //   decoration: BoxDecoration(
-              //     color: Colors.blue[100], // Background color for the title
-              //     borderRadius: BorderRadius.circular(5),
-              //   ),
-              //   child: Text(
-              //     desc['title']!,
-              //     style: TextStyle(
-              //       fontSize: 14, // Slightly smaller font size
-              //       fontWeight: FontWeight.bold,
-              //       color: Colors.black, // Title text color
-              //     ),
-              //   ),
-              // ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Html(
-                    data: desc['description'],
-                    style: {
-                      "p": Style(
-                        fontSize: FontSize(widget.textSize),
-                        margin: Margins.zero,
-                        padding: HtmlPaddings.zero,
-                      ),
-                    },
+              // Info Chips - Reduced padding
+              if ((word?.mediaFiles?.isNotEmpty ?? false) ||
+                  (word?.wordReferences!.isNotEmpty ?? false))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      if (word?.mediaFiles?.isNotEmpty ?? false)
+                        _buildInfoChip(
+                          icon: Icons.photo_library,
+                          label: '${word!.mediaFiles!.length} Media',
+                          onTap: () => _scrollToSection(_mediaKey),
+                        ),
+                      if (word?.wordReferences?.isNotEmpty ?? false)
+                        _buildInfoChip(
+                          icon: Icons.link,
+                          label: '${word!.wordReferences!.length} References',
+                          onTap: () => _scrollToSection(_referencesKey),
+                        ),
+                    ],
                   ),
+                ),
+              // Language Selector - More compact
+              _buildLanguageSelector(),
+            ],
+          ),
+        ),
+
+        // Main Content
+        Expanded(
+          child: ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            children: [
+              // Description Card
+              _buildDescriptionCard(descriptions[currentTabIndex]),
+              const SizedBox(height: 12),
+
+              // Media Gallery Section
+              if (word?.mediaFiles?.isNotEmpty ?? false) ...[
+                Container(
+                  key: _mediaKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle('Media Gallery', Icons.photo_library),
+                      _buildMediaGrid(word!.mediaFiles!),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // References Section
+              if (word?.wordReferences?.isNotEmpty ?? false)
+                Container(
+                  key: _referencesKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle('Related Terms', Icons.link),
+                      _buildReferenceList(),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: descriptions.length,
+        itemBuilder: (context, index) {
+          final desc = descriptions[index];
+          final isSelected = currentTabIndex == index;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                currentTabIndex = index;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? (isDark
+                        ? AppTheme.secondaryDark
+                        : AppTheme.secondaryLight)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  width: isDark ? 1 : 0.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: Image.asset(
+                      'icons/flags/png100px/${desc['name'].toString().toLowerCase()}.png',
+                      package: 'country_icons',
+                      width: 20,
+                      height: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.secondaryDark : AppTheme.secondaryLight,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: isDark ? Colors.white : AppTheme.primaryColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.white : AppTheme.primaryColor,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDescriptionCard(Map<String, String> desc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      elevation: 1,
+      margin: EdgeInsets.zero,
+      color: isDark ? Theme.of(context).cardColor : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          key: ValueKey(desc['name']),
+          padding: const EdgeInsets.all(12),
+          child: desc['description']!.isEmpty
+              ? Center(
+                  child: Text(
+                    'No description available for ${desc['title']}',
+                    style: TextStyle(
+                      fontSize: widget.textSize,
+                      color: isDark ? Colors.white60 : Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                )
+              : Html(
+                  data: desc['description'],
+                  style: {
+                    "body": Style(
+                      fontSize: FontSize(widget.textSize),
+                      lineHeight: LineHeight.number(1.4),
+                      color: isDark ? Colors.white : Colors.black87,
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                    ),
+                    "p": Style(
+                      margin: Margins.only(bottom: 8),
+                    ),
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: isDark ? Colors.white : Theme.of(context).primaryColor,
+            size: 18,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: widget.textSize * 0.9,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Theme.of(context).primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReferenceList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      elevation: 2,
+      color: isDark ? Theme.of(context).cardColor : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: word!.wordReferences!.map((ref) {
+            return InkWell(
+              onTap: () => _navigateToWordDetail(context, ref.id),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      isDark ? AppTheme.secondaryDark : AppTheme.secondaryLight,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.3)
+                        : Theme.of(context).primaryColor.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.link,
+                      size: 16,
+                      color: isDark
+                          ? Colors.white
+                          : Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Html(
+                        data: ref.name,
+                        style: {
+                          "body": Style(
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.zero,
+                            fontSize: FontSize(widget.textSize * 0.9),
+                            color: isDark
+                                ? Colors.white
+                                : Theme.of(context).primaryColor,
+                          ),
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaGrid(List<MediaFile> mediaFiles) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: mediaFiles.length,
+      itemBuilder: (context, index) {
+        final mediaFile = mediaFiles[index];
+
+        return GestureDetector(
+          onTap: () => showDialog(
+            context: context,
+            builder: (context) => MediaViewDialog(
+              mediaFiles: mediaFiles,
+              initialIndex: index,
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).shadowColor,
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    mediaFile.filePath,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: isDarkMode
+                            ? Theme.of(context).cardColor
+                            : Colors.grey[100],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: isDarkMode
+                            ? Theme.of(context).cardColor
+                            : Colors.grey[100],
+                        child: const Center(
+                          child: Icon(Icons.error_outline, color: Colors.red),
+                        ),
+                      );
+                    },
+                  ),
+                  if (mediaFile.fileType == 'video')
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          const Center(
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => showDialog(
+                        context: context,
+                        builder: (context) => MediaViewDialog(
+                          mediaFiles: mediaFiles,
+                          initialIndex: index,
+                        ),
+                      ),
+                      splashColor: Colors.white.withOpacity(0.1),
+                      highlightColor: Colors.transparent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -182,267 +638,6 @@ class _WordDetailState extends ConsumerState<WordDetail>
     } catch (e) {
       print('Error navigating to word detail: $e');
     }
-  }
-
-  Widget _buildReferencesSection() {
-    if (word?.wordReferences == null || word!.wordReferences!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Initial number of references to show
-    const int initialDisplayCount = 2;
-
-    // State variable to track if all references are shown
-    final ValueNotifier<bool> showAll = ValueNotifier<bool>(false);
-
-    return ValueListenableBuilder<bool>(
-      valueListenable: showAll,
-      builder: (context, isExpanded, child) {
-        final displayedRefs = isExpanded
-            ? word!.wordReferences!
-            : word!.wordReferences!.take(initialDisplayCount).toList();
-
-        return Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Card(
-            elevation: 4,
-            margin: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header with diamond icon
-                GestureDetector(
-                  onTap: () {
-                    showAll.value = !showAll.value;
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(Icons.link, color: Colors.blue[700], size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'References (${word!.wordReferences!.length})',
-                          style: TextStyle(
-                            fontSize: widget.textSize * 0.9,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
-                          ),
-                        ),
-                        const Spacer(),
-                        // Diamond icon that rotates based on expanded state
-                        Transform.rotate(
-                          angle: isExpanded
-                              ? 0
-                              : 3.14159 / 4, // 45 degrees when not expanded
-                          child: Icon(
-                            Icons.diamond_outlined,
-                            color: Colors.blue[700],
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // References content
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  constraints: BoxConstraints(
-                    maxHeight: isExpanded ? 200 : 80,
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(12),
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: displayedRefs.map((ref) {
-                        return InkWell(
-                          onTap: () => _navigateToWordDetail(context, ref.id),
-                          child: Html(
-                            data: ref.name,
-                            style: {
-                              "p": Style(
-                                margin: Margins.zero,
-                                padding: HtmlPaddings.zero,
-                                fontSize: FontSize(widget.textSize * 0.9),
-                                color: Colors.blue[700],
-                                textDecoration: TextDecoration.underline,
-                              ),
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (word == null) {
-      return const Center(child: Text("Word not found!"));
-    }
-
-    List<MediaFile> mediaFiles = word?.mediaFiles ?? [];
-    bool hasReferences =
-        word?.wordReferences != null && word!.wordReferences!.isNotEmpty;
-
-    return DefaultTabController(
-      length: descriptions.length,
-      child: Scaffold(
-        body: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  TabBar(
-                    controller: _tabController,
-                    tabs: descriptions.map((desc) {
-                      return Tab(
-                        icon: Image.asset(
-                          'icons/flags/png100px/${desc['name'].toString().toLowerCase()}.png',
-                          package: 'country_icons',
-                          width: 24,
-                          height: 24,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  Expanded(child: _buildSwipeableDescriptions()),
-                  if (mediaFiles.isNotEmpty) _buildMediaSection(mediaFiles),
-                  if (hasReferences) const SizedBox(height: 100),
-                ],
-              ),
-            ),
-            if (hasReferences) _buildReferencesSection(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMediaSection(List<MediaFile> mediaFiles) {
-    return Card(
-      elevation: 4, // Increased elevation for a more pronounced shadow
-      margin: const EdgeInsets.only(bottom: 16), // Increased bottom margin
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Rounded corners
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.photo_library, color: Colors.blue[700], size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Media Gallery',
-                  style: TextStyle(
-                    fontSize: widget.textSize * 0.9,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Container(
-              height: 120, // Set a smaller height for the media section
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal, // Horizontal scrolling
-                itemCount: mediaFiles.length,
-                itemBuilder: (context, index) {
-                  final mediaFile = mediaFiles[index];
-                  return GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return MediaViewDialog(
-                            mediaFiles: mediaFiles,
-                            initialIndex: index,
-                          );
-                        },
-                      );
-                    },
-                    child: Container(
-                      width: 100, // Set a fixed width for each media item
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 4), // Spacing between items
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Stack(
-                          children: [
-                            Image.network(
-                              mediaFile.filePath,
-                              fit: BoxFit.cover, // Cover the entire area
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.error),
-                                );
-                              },
-                            ),
-                            // Overlay effect to indicate clickability
-                            if (mediaFile.fileType ==
-                                'video') // Check if the media file is a video
-                              Positioned.fill(
-                                child: Container(
-                                  color: Colors.black.withOpacity(
-                                      0.3), // Semi-transparent overlay
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons
-                                        .play_arrow, // Play icon for video indication
-                                    color: Colors.white,
-                                    size: 30, // Slightly smaller play icon
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

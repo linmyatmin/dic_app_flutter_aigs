@@ -27,6 +27,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final authState = ref.watch(authProvider);
     final plans = ref.watch(subscriptionPlansProvider);
     final subscriptionState = ref.watch(subscriptionProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Use subscription state's plan ID if available, otherwise fall back to auth state
     final int currentUserSubscriptionPlanId =
@@ -92,17 +93,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
 
     Widget _buildSubscriptionCard(SubscriptionPlan plan, bool isCurrentPlan) {
-      // Define colors
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       final currentPlanColor = Colors.green.shade600;
       final subscriptionState = ref.watch(subscriptionProvider);
       final currentSubscription = subscriptionState.currentSubscription;
       final authState = ref.watch(authProvider);
 
-      // Check if current subscription is paid (price > 0)
       final bool hasActivePaidPlan =
           currentSubscription != null && currentSubscription.price > 0;
 
-      // Format expiration date if available
       String? expirationText;
       if (isCurrentPlan && authState.user?.endDate != null) {
         final endDate = authState.user!.endDate;
@@ -110,14 +109,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             'Expires: ${endDate.toLocal().toString().split(' ')[0]}';
       }
 
-      // Determine button state and label
       String buttonLabel;
       bool isButtonEnabled;
       if (isCurrentPlan) {
         buttonLabel = 'Current Plan';
         isButtonEnabled = false;
       } else if (hasActivePaidPlan) {
-        // Disable all plan buttons (both paid and free) when there's an active paid plan
         buttonLabel = 'Changes after current plan ends';
         isButtonEnabled = false;
       } else {
@@ -131,15 +128,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           borderRadius: BorderRadius.circular(16),
           border: isCurrentPlan
               ? Border.all(color: currentPlanColor, width: 2)
-              : Border.all(color: Colors.grey.shade300),
-          color: isCurrentPlan ? Colors.green.shade50 : Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+              : Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.grey.shade300),
+          color: isDark
+              ? (isCurrentPlan
+                  ? Colors.green.shade900
+                  : Theme.of(context).cardColor)
+              : (isCurrentPlan ? Colors.green.shade50 : Colors.white),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Column(
           children: [
@@ -159,11 +165,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        Icon(Icons.check_circle, color: Colors.white, size: 18),
                         SizedBox(width: 8),
                         Text(
                           'Current Plan',
@@ -202,8 +204,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color:
-                              isCurrentPlan ? currentPlanColor : Colors.black,
+                          color: isDark
+                              ? (isCurrentPlan
+                                  ? Colors.green.shade400
+                                  : Colors.white)
+                              : (isCurrentPlan
+                                  ? currentPlanColor
+                                  : Colors.black),
                         ),
                       ),
                       Container(
@@ -212,9 +219,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: isCurrentPlan
-                              ? currentPlanColor
-                              : Colors.grey.shade200,
+                          color: isDark
+                              ? (isCurrentPlan
+                                  ? currentPlanColor
+                                  : Colors.white.withOpacity(0.1))
+                              : (isCurrentPlan
+                                  ? currentPlanColor
+                                  : Colors.grey.shade200),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -222,8 +233,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color:
-                                isCurrentPlan ? Colors.white : Colors.black87,
+                            color: isDark
+                                ? Colors.white
+                                : (isCurrentPlan
+                                    ? Colors.white
+                                    : Colors.black87),
                           ),
                         ),
                       ),
@@ -234,7 +248,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     plan.description ?? '',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -247,8 +261,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isButtonEnabled
-                            ? primaryColor
-                            : Colors.grey.shade400,
+                            ? Theme.of(context).primaryColor
+                            : (isDark
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.grey.shade400),
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -282,7 +299,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         'Current paid plan must expire before switching to another paid plan',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: isDark ? Colors.white60 : Colors.grey.shade600,
                           fontStyle: FontStyle.italic,
                         ),
                         textAlign: TextAlign.center,
@@ -297,17 +314,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor:
+          isDark ? Theme.of(context).primaryColorLight : Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Subscription Plans',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: plans.when(
@@ -315,7 +333,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         error: (error, stack) => Center(
           child: Text(
             'Error: $error',
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(
+              color: isDark ? Colors.red.shade300 : Colors.red,
+            ),
           ),
         ),
         data: (plansList) => ListView.builder(

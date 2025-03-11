@@ -9,16 +9,16 @@ class AboutUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final padding = screenWidth > 800 ? screenWidth * 0.2 : 20.0;
-    final primaryColor = Theme.of(context).primaryColor;
+    final primaryColor = Theme.of(context).primaryColorLight;
     return Scaffold(
-      backgroundColor: primaryColor,
+      backgroundColor: Theme.of(context).primaryColorLight,
       appBar: showAppBar
           ? AppBar(
               title: const Text(
                 'About Us',
                 style: TextStyle(color: Colors.white),
               ),
-              backgroundColor: const Color(0xFF2A4D60),
+              backgroundColor: Theme.of(context).primaryColor,
               iconTheme: const IconThemeData(color: Colors.white),
             )
           : null,

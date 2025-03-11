@@ -13,23 +13,47 @@ class FavoriteScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // If not authenticated, show login prompt
+    // If not authenticated, show login prompt with improved design
     if (!authState.isAuthenticated) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Please login to view your favorites'),
-            SizedBox(height: 16),
-            ElevatedButton(
+            Icon(
+              Icons.favorite_border,
+              size: 64,
+              color: isDark ? Colors.white70 : Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Please login to view your favorites',
+              style: TextStyle(
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.grey[800],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                 );
               },
-              child: Text('Login'),
+              icon: const Icon(Icons.login),
+              label: const Text('Login'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColorLight,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
             ),
           ],
         ),
@@ -39,6 +63,8 @@ class FavoriteScreen extends ConsumerWidget {
     final favorites = ref.watch(favoritesProvider);
 
     return Scaffold(
+      backgroundColor:
+          isDark ? Theme.of(context).primaryColorLight : Colors.grey.shade300,
       body: favorites.isEmpty
           ? Center(
               child: Column(
@@ -46,30 +72,30 @@ class FavoriteScreen extends ConsumerWidget {
                 children: [
                   Icon(
                     Icons.favorite_border,
-                    size: 64,
-                    color: Colors.grey[400],
+                    size: 80,
+                    color: isDark ? Colors.white30 : Colors.grey[300],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Text(
                     'No favorites yet',
                     style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                      fontSize: 20,
+                      color: isDark ? Colors.white : Colors.grey[800],
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Add words to your favorites list',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
+                      fontSize: 16,
+                      color: isDark ? Colors.white70 : Colors.grey[600],
                     ),
                   ),
                 ],
               ),
             )
-          : ListView.separated(
+          : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               itemCount: favorites.length,
               itemBuilder: (context, index) {
@@ -85,61 +111,55 @@ class FavoriteScreen extends ConsumerWidget {
                           '${word.nameEn!.replaceAll(RegExp(r'<\/?p>'), '')} removed from favorites',
                         ),
                         behavior: SnackBarBehavior.floating,
+                        backgroundColor: Theme.of(context).primaryColor,
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .addFavorite(word);
+                          },
+                        ),
                       ),
                     );
                   },
                   background: Container(
                     decoration: BoxDecoration(
                       color: Colors.red[500],
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.white,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Remove',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.delete_outline, color: Colors.white),
+                      ],
                     ),
                   ),
                   child: Card(
-                    elevation: 0,
+                    elevation: isDark ? 0 : 1,
+                    margin: const EdgeInsets.only(bottom: 8),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: Colors.grey[200]!),
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.grey[200]!,
+                      ),
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      title: Html(
-                        data: word
-                            .nameEn, // Assuming nameEn contains HTML content
-                        style: {
-                          // Customize any HTML tags' styles here, e.g., <sub> or <p>
-                          "p": Style(
-                            fontSize: FontSize(12.0),
-                            fontWeight: FontWeight.normal,
-                            textAlign: TextAlign.left,
-                            maxLines: 1, // Limit to one line
-                            // height: 1.2,
-                          ),
-                          "sub": Style(
-                            fontSize: FontSize(
-                                6.0), // Slightly smaller font for subscript
-                          ),
-                        },
-                      ),
-                      // Text(
-                      //   word.nameEn!.replaceAll(RegExp(r'<\/?p>'), ''),
-                      //   style: const TextStyle(
-                      //     fontSize: 16,
-                      //     fontWeight: FontWeight.w500,
-                      //   ),
-                      // ),
-                      trailing: const Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey,
-                      ),
+                    color: isDark ? Theme.of(context).cardColor : Colors.white,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -148,11 +168,61 @@ class FavoriteScreen extends ConsumerWidget {
                           ),
                         );
                       },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Html(
+                                    data: word.nameEn,
+                                    style: {
+                                      "body": Style(
+                                        margin: Margins.zero,
+                                        padding: HtmlPaddings.zero,
+                                        fontSize: FontSize(16),
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      "sub": Style(
+                                        fontSize: FontSize(10),
+                                      ),
+                                    },
+                                  ),
+                                  if (word.despEn?.isNotEmpty ?? false)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        word.despEn!
+                                            .replaceAll(RegExp(r'<[^>]*>'), ''),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: isDark ? Colors.white70 : Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );
               },
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
             ),
     );
   }

@@ -35,88 +35,99 @@ class _MediaViewDialogState extends State<MediaViewDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog.fullscreen(
-      child: Stack(
-        children: [
-          // Media PageView
-          PageView.builder(
-            controller: _pageController,
-            itemCount: widget.mediaFiles.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              final mediaFile = widget.mediaFiles[index];
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Media content
-                  Expanded(
-                    child: mediaFile.fileType == 'image'
-                        ? InteractiveViewer(
-                            minScale: 0.5,
-                            maxScale: 4.0,
-                            child: Hero(
-                              tag: mediaFile.filePath,
-                              child: Image.network(
-                                mediaFile.filePath,
-                                fit: BoxFit.contain,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onVerticalDragEnd: (details) {
+        if (details.primaryVelocity! > 300) {
+          // Swipe down detected, close the dialog
+          Navigator.of(context).pop();
+        }
+      },
+      child: Dialog.fullscreen(
+        child: Stack(
+          children: [
+            // Media PageView
+            PageView.builder(
+              controller: _pageController,
+              itemCount: widget.mediaFiles.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                final mediaFile = widget.mediaFiles[index];
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Media content
+                    Expanded(
+                      child: mediaFile.fileType == 'image'
+                          ? InteractiveViewer(
+                              minScale: 0.5,
+                              maxScale: 4.0,
+                              child: Hero(
+                                tag: mediaFile.filePath,
+                                child: Image.network(
+                                  mediaFile.filePath,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
-                            ),
-                          )
-                        : VideoViewer(videoUrl: mediaFile.filePath),
-                  ),
-                  // Description
-                  if (mediaFile.description?.isNotEmpty == true)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      color: Colors.black.withOpacity(0.5),
-                      width: double.infinity,
-                      child: Text(
-                        mediaFile.description ?? '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                            )
+                          : VideoViewer(videoUrl: mediaFile.filePath),
                     ),
-                ],
-              );
-            },
-          ),
-          // Close button
-          Positioned(
-            top: 0,
-            right: 0,
-            child: SafeArea(
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.black, size: 30),
-                onPressed: () => Navigator.of(context).pop(),
+                    // Description
+                    if (mediaFile.description?.isNotEmpty == true)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        color: Colors.black.withOpacity(0.5),
+                        width: double.infinity,
+                        child: Text(
+                          mediaFile.description ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            // Close button
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                child: IconButton(
+                  icon: Icon(Icons.close,
+                      color: isDark ? Colors.white : Colors.black, size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
             ),
-          ),
-          // Counter
-          Positioned(
-            top: 0,
-            left: 0,
-            child: SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  '${_currentIndex + 1}/${widget.mediaFiles.length}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            // Counter
+            Positioned(
+              top: 0,
+              left: 0,
+              child: SafeArea(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    '${_currentIndex + 1}/${widget.mediaFiles.length}',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
