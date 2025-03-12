@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dic_app_flutter/providers/language_settings_provider.dart'; // Import language settings provider
 import 'package:dic_app_flutter/theme/app_theme.dart';
+import 'package:dic_app_flutter/screens/detail_screen.dart';
 
 class WordDetail extends ConsumerStatefulWidget {
   final Word? word;
@@ -607,36 +608,24 @@ class _WordDetailState extends ConsumerState<WordDetail>
   void _navigateToWordDetail(BuildContext context, int wordId) async {
     try {
       List<Word> wordDetails = await API().getWordDetailById(wordId);
-      if (wordDetails.isNotEmpty) {
+      if (wordDetails.isNotEmpty && mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(
-                title: Html(
-                  data: wordDetails.first.nameEn ?? '',
-                  style: {
-                    "body": Style(
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                      fontSize: FontSize(20),
-                      color: Colors.white,
-                    ),
-                  },
-                ),
-                backgroundColor: Theme.of(context).primaryColor,
-                iconTheme: const IconThemeData(color: Colors.white),
-              ),
-              body: WordDetail(
-                word: wordDetails.first,
-                textSize: widget.textSize,
-              ),
-            ),
+            builder: (context) => DetailScreen(word: wordDetails.first),
           ),
         );
       }
     } catch (e) {
       print('Error navigating to word detail: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load word details'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 }
