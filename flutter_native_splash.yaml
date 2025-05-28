@@ -18,5 +18,24 @@ flutter_native_splash:
   color_dark: '#2A4D60'
   android_12:
     image: assets/icon/icon_no_bg.png
+    icon_background_color: "#101636"
     color: '#2A4D60'
     color_dark: '#2A4D60'
+
+# flutter_native_splash:
+#   image: assets/icon/icon_no_bg.png
+#   # background_image: assets/icon/icon_no_bg.png
+#   color: "#2A4D60"
+#   color_dark: "#2A4D60"
+#   fullscreen: true
+#   # android_gravity: fill
+#   ios_content_mode: center
+
+#   android_12:
+#     image: assets/icon/icon_no_bg.png
+#     # background_image: assets/icon/icon_no_bg.png
+#     fullscreen: true
+#     # android_gravity: fill
+#     ios_content_mode: center
+
+#   web: false

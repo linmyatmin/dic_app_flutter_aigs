@@ -33,7 +33,8 @@ android {
     namespace "com.aigs.gempedia"
     // compileSdkVersion 34
     compileSdkVersion 35
-    ndkVersion flutter.ndkVersion
+    ndkVersion "27.0.12077973"
+    // ndkVersion flutter.ndkVersion
     // ndkVersion "25.1.8937393"
 
     compileOptions {

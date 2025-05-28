@@ -19,8 +19,7 @@
     <!-- <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style> -->
-
-     <style name="NormalTheme" parent="Theme.MaterialComponents">
+    <style name="NormalTheme" parent="Theme.MaterialComponents">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>
