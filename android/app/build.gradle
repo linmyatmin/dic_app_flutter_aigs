@@ -1,10 +1,8 @@
 plugins {
    id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -33,17 +31,21 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.aigs.gempedia"
-    compileSdkVersion 34
+    // compileSdkVersion 34
+    compileSdkVersion 35
     ndkVersion flutter.ndkVersion
     // ndkVersion "25.1.8937393"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        // sourceCompatibility JavaVersion.VERSION_1_8
+        // targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        // jvmTarget = '1.8'
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -53,15 +55,11 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.aigs.gempedia"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        // compileSdkVersion 34
-        // minSdkVersion flutter.minSdkVersion
         minSdkVersion 21
-        // minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -79,7 +77,10 @@ android {
           // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             // signingConfig signingConfigs.debug
+            // minifyEnabled false
+            // shrinkResources false
             signingConfig signingConfigs.release
+            // signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
@@ -90,12 +91,7 @@ flutter {
 }
 
 dependencies {
-    // implementation 'com.stripe:stripe-android:20.44.2'
-    // implementation 'com.stripe:stripe-android:21.0.0'
     implementation platform('com.google.firebase:firebase-bom:32.7.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.android.gms:play-services-auth:20.5.0'
 }
-
-// Add this at the bottom
-// apply plugin: 'com.google.gms.google-services'

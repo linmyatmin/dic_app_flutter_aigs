@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://122.155.9.144', // e.g., 'https://api.yourapp.com'
+      // baseUrl: 'http://122.155.9.144', // e.g., 'https://api.yourapp.com'
+      baseUrl: 'https://gempedia.info',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart';
 
 class SubscriptionService {
   final Dio _dio = Dio();
-  final String baseUrl = "http://122.155.9.144/api";
+  // final String baseUrl = "http://122.155.9.144/api";
+  final String baseUrl = "https://gempedia.info/api";
   final SecureStorageService _secureStorage = SecureStorageService();
   final StripeService _stripeService = StripeService();
 

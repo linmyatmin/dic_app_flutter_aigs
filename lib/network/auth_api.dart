@@ -9,7 +9,8 @@ class AuthAPI {
   // final String _baseUrl = "https://dummyjson.com";
   // final String _baseUrl = "http://192.168.9.144";
   final String _baseUrl = "https://localhost:44378";
-  final String _baseUrlProduction = "http://122.155.9.144";
+  // final String _baseUrlProduction = "http://122.155.9.144";
+  final String _baseUrlProduction = "https://gempedia.info";
 
   Future<UserModel> getUserData(String? userId, String? token) async {
     try {

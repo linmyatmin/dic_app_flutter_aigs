@@ -62,8 +62,8 @@
 		<string>689664259695-knkj277p8298hthnsorvnu50q89cpe3l.apps.googleusercontent.com</string>
 		<!-- End of Google Sign-in Section -->
 		<key>NSPhotoLibraryUsageDescription</key>
-    	<string>This app needs access to your photo library to upload and display images.</string>
-    	<key>NSCameraUsageDescription</key>
-    	<string>This app requires access to the camera to scan QR codes and capture images.</string>
+		<string>This app needs access to your photo library to upload and display images.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>This app requires access to the camera to scan QR codes and capture images.</string>
 	</dict>
 </plist>

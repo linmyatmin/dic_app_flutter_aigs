@@ -9,10 +9,8 @@ import 'package:dic_app_flutter/services/secure_storage_service.dart';
 
 class API {
   final Dio _dio = Dio();
-  // final String _baseUrl = "https://jsonplaceholder.typicode.com";
-  final String _baseUrl = "https://api.aigsthailand.com/api";
-  final String _baseUrl2 = "http://122.155.9.144/api";
-  // final String _baseUrl = "https://fakestoreapi.com";
+  // final String _baseUrl2 = "http://122.155.9.144/api";
+  final String _baseUrl2 = "https://gempedia.info/api";
 
   // Future<List<User>> getUsers() async {
   //   final response = await http.get(Uri.parse("$_baseUrl/users"));

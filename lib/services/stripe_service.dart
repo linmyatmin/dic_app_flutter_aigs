@@ -5,13 +5,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class StripeService {
-  static const String _baseUrl = 'http://122.155.9.144/api/UserSubscriptions';
+  // static const String _baseUrl = 'http://122.155.9.144/api/UserSubscriptions';
+  static const String _baseUrl = 'https://gempedia.info/api/UserSubscriptions';
 
   // Initialize Stripe
   static Future<void> initialize() async {
-    Stripe.publishableKey =
-        'pk_test_51N6WAKJTMaf4YPFavjJJq7kElFcg07B4wOzsqpM1fqALPEB8DlFKMPQ0glPYmFYuqwGPXoNF5N0apwMIwtWfd6SQ0014CyiAD9';
-    await Stripe.instance.applySettings();
+    try {
+      Stripe.publishableKey =
+          'pk_test_51N6WAKJTMaf4YPFavjJJq7kElFcg07B4wOzsqpM1fqALPEB8DlFKMPQ0glPYmFYuqwGPXoNF5N0apwMIwtWfd6SQ0014CyiAD9';
+      await Stripe.instance.applySettings();
+    } catch (e) {
+      print('Error initializing Stripe: $e');
+      rethrow;
+    }
   }
 
   // Create a payment intent
