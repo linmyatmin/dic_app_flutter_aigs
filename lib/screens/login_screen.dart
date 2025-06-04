@@ -125,6 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'assets/icon/icon_no_bg.png',
                           width: size.width * 0.2,
                           height: size.width * 0.2,
+                          fit: BoxFit.fill,
                         ),
                       ),
                     ),

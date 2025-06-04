@@ -115,6 +115,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           'assets/icon/icon_no_bg.png',
                           width: size.width * 0.2,
                           height: size.width * 0.2,
+                          fit: BoxFit.fill,
                         ),
                       ),
                     ),

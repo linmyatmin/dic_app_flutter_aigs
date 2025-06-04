@@ -117,7 +117,6 @@ class DetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-
           // Word detail component
           Expanded(
             child: WordDetail(

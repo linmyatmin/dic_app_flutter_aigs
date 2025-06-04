@@ -363,20 +363,31 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                                   Text(
                                     _getLanguageName(entry.key),
                                     style: TextStyle(
-                                      color: isEnglish ? Colors.grey : null,
+                                      // color: isEnglish ? Colors.grey : null,
+                                      color: isEnglish ? null : Colors.grey,
                                     ),
                                   ),
                                 ],
                               ),
                               value: entry.value,
-                              onChanged: isEnglish
+                              // onChanged: isEnglish
+                              //     ? null
+                              //     : (bool value) {
+                              //         ref
+                              //             .read(
+                              //                 languageSettingsProvider.notifier)
+                              //             .toggleLanguage(entry.key);
+                              //       },
+                              onChanged: null, // Disable all toggles
+                              secondary: isEnglish
                                   ? null
-                                  : (bool value) {
-                                      ref
-                                          .read(
-                                              languageSettingsProvider.notifier)
-                                          .toggleLanguage(entry.key);
-                                    },
+                                  : const Text(
+                                      'Coming Soon',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                             );
                           }).toList(),
                         );
